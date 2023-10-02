@@ -1,0 +1,7 @@
+*.pyc
+*.log
+*.pickle
+*.swp
+*.ckpt
+*.pth
+
