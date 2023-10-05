@@ -1,0 +1,9 @@
+data_dir: C:\Users\lahir\Downloads\
+mode: train
+
+train:
+  dataset: freihand
+
+datasets:
+  freihand:
+
