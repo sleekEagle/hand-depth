@@ -118,6 +118,47 @@ class Predict:
             joints_2d_left = out['joint_2p5d'][:, 21:]
         return heatmap_np,joints_2d_right,joints_2d_left
     
+    def save_open_model(self,im_list):
+        # from torch.utils.tensorboard import SummaryWriter
+        #create a batch of img tensors from the list of PIL images given
+        im_t=torch.empty(0,3,256,256)
+        for im in im_list:
+            img_tensor = self.transform(im)/255.0
+            img_tensor=torch.unsqueeze(img_tensor,dim=0)
+            im_t=torch.concat((im_t,img_tensor),dim=0)
+        # img_tensor=self.transform(im)/255.0
+        # img_tensor=torch.unsqueeze(img_tensor,dim=0)
+        mask=torch.zeros(len(im_list),1,256,256)
+        input={'img':im_t.cuda(),'mask':mask.cuda()}
+        if isinstance(self.tester.model, torch.nn.DataParallel):
+            model = self.tester.model.module
+
+        from torchview import draw_graph
+        batch_size = 2
+        model_graph = draw_graph(model, input_size=(batch_size, 128), device='meta')
+
+
+        print('here')
+
+        # from torchviz import make_dot
+        # # writer = SummaryWriter("torchlogs/")
+        # if isinstance(self.tester.model, torch.nn.DataParallel):
+        #     model = self.tester.model.module
+        # model_out = model(input, 'test', epoch_cnt=1e8)
+        # make_dot(var=model_out,params=dict(model.named_parameters()))
+
+        
+        # writer.add_graph(model, (input,'test'))
+        # writer.close()
+
+
+        # input_names = ["Hand Image"]
+        # output_names = ["Hand Keypoint Predictions"]
+        # if isinstance(self.tester.model, torch.nn.DataParallel):
+        #     model = self.tester.model.module
+        # torch.onnx.export(model,(input,"test"),f="C:\\Users\\lahir\\code\\hand-depth\\model.onnx",
+        #                   input_names=input_names, output_names=output_names)
+    
 def main():
     predict=Predict()
     im1 = Image.open(r"C:\Users\lahir\Downloads\hands\Lhand_down.jpg") 
@@ -125,7 +166,10 @@ def main():
     im3 = Image.open(r"C:\Users\lahir\Downloads\hands\Rhand_down.jpg") 
     im4 = Image.open(r"C:\Users\lahir\Downloads\hands\Rhand_up.jpg") 
 
+
     im_list=[im1,im2,im3,im4]
+    # predict.save_open_model(im_list)
+
     heatmap_np,joints_2d_right,joints_2d_left=predict.make_prediction(im_list)
     n=3
     im_2d=predict.draw_skeleton(im_list[n],joints_2d_right[n],joints_2d_left[n],['right'])

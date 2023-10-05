@@ -31,6 +31,7 @@ class PositionEmbeddingSine(nn.Module):
             scale = 2 * math.pi
         self.scale = scale
 
+    #img is just used to get its device
     def forward(self, img, mask):
         assert mask is not None
         not_mask = ~(mask.squeeze(1)>0)

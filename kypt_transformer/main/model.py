@@ -346,6 +346,7 @@ class Model(nn.Module):
         obj_kps_coord_gt = None
 
         # Get the positional embeddings
+        #input_img is just used to get its device. pos does not depend on the content of input_img
         pos = self.position_embedding(nn.functional.interpolate(input_img, (cfg.output_hm_shape[2], cfg.output_hm_shape[1])),
                                 nn.functional.interpolate(input_mask, (cfg.output_hm_shape[2], cfg.output_hm_shape[1])))
 

@@ -230,6 +230,7 @@ def vis_3d_keypoints(kps_3d, score, skeleton, filename=None, score_thr=0.4, line
 
 
 def vis_keypoints_new(img, kps, score, skeleton, filename=None, score_thr=0.4, line_width=3, circle_rad=3, save_path=None, hand_type='right'):
+    #rgb_dict keeps the rgb color values for each joint, to use when plotting the skeleton
     rgb_dict = get_keypoint_rgb(skeleton)
     _img = Image.fromarray(img.astype('uint8'))
     draw = ImageDraw.Draw(_img)
