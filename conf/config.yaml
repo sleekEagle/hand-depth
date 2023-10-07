@@ -1,9 +1,13 @@
 data_dir: C:\Users\lahir\Downloads\
-mode: train
+# mode: training or evaluation
+mode: evaluation
 
 train:
   dataset: freihand
 
 datasets:
   freihand:
+    base_path: 'C:\\Users\\lahir\\Downloads\\'
+    version: -1
+    get_mask: False
 

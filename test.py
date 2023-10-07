@@ -107,15 +107,47 @@
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
-import data.FreiHAND as FreiHAND
+import data.FreiHAND.dataset as dataset
+
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(conf : DictConfig) -> None:
     print(OmegaConf.to_yaml(conf))
-    dataset=FreiHAND.dataset(conf)
+    global c
+    c=conf
+    # d=dataset.FreiHAND(conf)
+    # dists=dataset.get_dist(d)
+    # print('ggg')
 
 if __name__ == "__main__":
     my_app()
+
+d=dataset.FreiHAND(c)
+d[100]['dists']
+# dists=dataset.get_dist(d)
+
+    
+
+# import json
+# import numpy as np
+
+# coords=np.empty((0,3))
+
+# path=r'C:\Users\lahir\Downloads\FreiHAND_pub_v2\freihand_train_data.json'
+# f = open(path)
+# data=json.load(f)
+
+# for key in data.keys():
+#     c=np.expand_dims(np.array(data[key]['joint_3d'][0]),axis=0)
+#     coords=np.concatenate((coords,c),axis=0)
+
+# dists=np.sqrt(np.sum(np.square(coords),axis=1))
+# np.min(dists),np.max(dists)
+
+
+
+
+
 
 
 

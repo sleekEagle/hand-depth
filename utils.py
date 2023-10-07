@@ -18,11 +18,24 @@ def joint_normalize(joint_coords,root_n=0):
     joint_coords_norm=joint_coords-palm_centers
     return joint_coords_norm
 
-#get hand dimentions: euclidian distances of bones of the hand
 
+def rearrange_array(a):
+    assert len(a.shape)==2 , "input must be 2D"
+    assert a.shape[0]==3 or a.shape[1]==3 , "one of the dimentions of the input must be 3 (for XYZ)"
+    if a.shape[1]==3:
+        a=np.moveaxis(a,1,0)
+    return a
+
+#get dist between two points
 def get_euclidian_dist(a1,a2):
+    a1=rearrange_array(a1)
+    a2=rearrange_array(a2)
     return np.sqrt(np.sum(np.square(a1-a2),axis=0))
 
+#get dist to a point from origin
+def get_euclidian_dist_pt(a):
+    a=rearrange_array(a)
+    return np.sqrt(np.sum(np.square(a),axis=0))
 
 '''
 get euclidian distances between consecetive hand joints
@@ -54,3 +67,15 @@ def get_hand_dims(kypts):
             rel=np.expand_dims(rel,axis=0)
             hand_dim=np.append(hand_dim,rel,axis=0)
     return hand_dim
+
+
+#get distance (depth of XYZ points) of a given dataset
+def get_dists(dataset):
+    dists=np.empty(0)
+    for i in range(len(dataset)):
+        try:
+            values=dataset[i]
+            dists=np.concatenate((dists,get_euclidian_dist_pt(values['xyz'])),axis=0) 
+        except Exception as e:
+            print(e)
+    return dists
