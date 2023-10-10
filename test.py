@@ -108,7 +108,7 @@
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import data.FreiHAND.dataset as dataset
-
+import utils
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(conf : DictConfig) -> None:
@@ -122,11 +122,17 @@ def my_app(conf : DictConfig) -> None:
 if __name__ == "__main__":
     my_app()
 
-d=dataset.FreiHAND(c)
-d[100]['dists']
-# dists=dataset.get_dist(d)
+dl=utils.get_dataloaders(c)['train']
 
-    
+
+sample=next(iter(dl))
+from models import model
+model=model.Model(c)
+model(sample)
+
+
+
+
 
 # import json
 # import numpy as np

@@ -79,3 +79,50 @@ def get_dists(dataset):
         except Exception as e:
             print(e)
     return dists
+
+#create dataloader from dataset
+import data.FreiHAND.dataset as dataset
+from torch.utils.data import DataLoader
+
+def get_dataloaders(conf):
+    dloaders={}
+    if 'training' in conf.mode:
+        d_tr=dataset.FreiHAND(conf,mode='training')
+        train_dataloader = DataLoader(d_tr, batch_size=conf.datasets.freihand.bs, shuffle=True)
+        dloaders['train']=train_dataloader
+    if 'evaluation' in conf.mode:
+        d_eval=dataset.FreiHAND(conf,mode='evaluation')
+        eval_dataloader = DataLoader(d_eval, batch_size=1, shuffle=True)
+        dloaders['eval']=d_eval
+    return dloaders
+
+#count the number of parameters of a model
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+#get all intrinsic matrices in the dataset
+def get_intrinsic_mats(dataloader):
+    import numpy as np
+    k_mats=np.empty((0,3,3))
+    for i, data in enumerate(dataloader, 0):
+        values=data['K'].numpy()
+        k_mats=np.concatenate((k_mats,values),axis=0) 
+    return k_mats
+
+#get all relative coordinates from the dataloader
+def get_rel_coords(dataloader):
+    import torch
+    coords=torch.empty((0,21,2))
+    for i,inputs in enumerate(dataloader):
+        roots=torch.repeat_interleave(torch.unsqueeze(inputs['uv'][:,0,:],dim=1),repeats=inputs['uv'].shape[1],dim=1)
+        fx=inputs['K'][:,0,0]
+        fy=inputs['K'][:,1,1]
+        fx=torch.unsqueeze(fx,dim=1).unsqueeze(dim=2)
+        fx=torch.repeat_interleave(fx,repeats=inputs['uv'].shape[1],dim=1)
+        fy=torch.unsqueeze(fy,dim=1).unsqueeze(dim=2)
+        fy=torch.repeat_interleave(fy,repeats=inputs['uv'].shape[1],dim=1)
+        f=torch.concat((fx,fy),dim=-1)
+        rel_coord=(inputs['uv']-roots)/f
+        coords=torch.cat((coords,rel_coord),dim=0)
+    return coords

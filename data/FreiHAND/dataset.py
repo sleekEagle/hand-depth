@@ -78,12 +78,30 @@ def show_eval_samples(base_path, num2show=None):
         plt.show()
 
 # show_training_samples('C:\\Users\\lahir\\Downloads\\FreiHAND_pub_v2_training\\','hom',num2show=10)
+'''
+ranges of the intrinsic matrix
+min :
+array([[190.78378074,   0.        , 112.        ],
+       [  0.        , 190.74944027, 112.        ],
+       [  0.        ,   0.        ,   1.        ]])
+
+max:
+array([[1214.18, 0,       112],
+       [0,       1213.68, 112],
+       [0,       0      , 1]])
+
+mean:
+array([[483.79409933,   0.        , 112.        ],
+       [  0.        , 483.81574158, 112.        ],
+       [  0.        ,   0.        ,   1.        ]])
+
+'''
 class FreiHAND(Dataset):
-    def __init__(self,conf):
+    def __init__(self,conf,mode):
         # load annotations
-        self.base_path=os.path.join(conf.datasets.freihand.base_path,f"FreiHAND_pub_v2_{conf.mode}")
-        self.db_data_anno = list(load_db_annotation(self.base_path,conf.mode))
-        self.mode=conf.mode
+        self.mode=mode
+        self.base_path=os.path.join(conf.datasets.freihand.base_path,f"FreiHAND_pub_v2_{self.mode}")
+        self.db_data_anno = list(load_db_annotation(self.base_path,self.mode))
         #the only version that makes sense for the evaluation set is the 0th choice
         if self.mode=='evaluation':
             self.version=sample_version.valid_options()[0]
@@ -141,6 +159,20 @@ def get_dist(dataset):
     plt.hist(dists)
     plt.show()
     return dists
+
+def get_intrinsic(dataset):
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    k_mats=np.empty(0,3,3)
+    for i in range(len(dataset)):
+        try:
+            values=dataset[i]['K']
+            k_mats=np.concatenate((k_mats,values),axis=0) 
+            print(f'idx = {i}')
+        except Exception as e:
+            print(e)
+    return k_mats
 
 
 

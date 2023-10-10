@@ -1,6 +1,7 @@
 data_dir: C:\Users\lahir\Downloads\
 # mode: training or evaluation
-mode: evaluation
+mode: [training]
+pos_embed_size: 224
 
 train:
   dataset: freihand
@@ -10,4 +11,33 @@ datasets:
     base_path: 'C:\\Users\\lahir\\Downloads\\'
     version: -1
     get_mask: False
+    bs : 12
+    joint_idx:
+      root : 0
+      little: 
+        mcp: 1
+        pip: 2
+        dip: 3
+        tip: 4
+      ring:
+        mcp: 5
+        pip: 6
+        dip: 7
+        tip: 8
+      middle:
+        mcp: 9
+        pip: 10
+        dip: 11
+        tip: 12
+      index:
+        mcp: 13
+        pip: 14
+        dip: 15
+        tip: 16
+      thumb:
+        mcp: 17
+        pip: 18
+        dip: 19
+        tip: 20
+
 
