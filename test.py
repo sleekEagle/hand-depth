@@ -109,37 +109,53 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 import data.FreiHAND.dataset as dataset
 import utils.utils as utils
-from utils.tasks import Trainer
+from utils.tasks import Trainer,Tester
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
-def my_app(conf : DictConfig) -> None:
+def main(conf : DictConfig) -> None:
     print(OmegaConf.to_yaml(conf))
     global c
     c=conf
-    # d=dataset.FreiHAND(conf)
-    # dists=dataset.get_dist(d)
-    # print('ggg')
+
+    trainer=Trainer(c)
+    trainer._make_model()
+    trainer._make_dataloader()
+
+    tester=Tester(c)
+    tester._make_dataloader()
+
+    tester.set_model(trainer.model)
+    tester.evaluate()
+
+    for epoch in range(c.train.n_epochs):
+        print(f'Starting epoch {epoch}')
+        for itr,inputs in enumerate(trainer.data_loader):
+            trainer.optimizer.zero_grad()
+            model_out=trainer.model(inputs)
+            loss=trainer.loss_func(model_out.double(),inputs['dists'].double())
+            loss.backward()
+            trainer.optimizer.step()
+            trainer.lr_scheduler.step()
+            # print(itr/len(trainer.data_loader))
+        
+        if (epoch+1)%conf.train.eval_freq==0:
+            tester.set_model(trainer.model)
+            tester.evaluate()
+        
 
 if __name__ == "__main__":
-    my_app()
+    main()
 
 # dl=utils.get_dataloaders(c)['train']
 
-trainer=Trainer(c)
-trainer._make_model()
-trainer._make_dataloader()
+
 
 # print('end')
 
-for epoch in range(c.train.n_epochs):
-    for itr,inputs in enumerate(trainer.dloaders['train']):
-        trainer.optimizer.zero_grad()
-        model_out=trainer.model(inputs)
-        loss=trainer.loss_func(model_out.double(),inputs['dists'].double())
-        loss.backward()
-        trainer.optimizer.step()
-        trainer.lr_scheduler.step()
-        print(loss)
+
+
+
+
 
 
 
