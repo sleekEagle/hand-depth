@@ -129,7 +129,18 @@ trainer=Trainer(c)
 trainer._make_model()
 trainer._make_dataloader()
 
-print('end')
+# print('end')
+
+for epoch in range(c.train.n_epochs):
+    for itr,inputs in enumerate(trainer.dloaders['train']):
+        trainer.optimizer.zero_grad()
+        model_out=trainer.model(inputs)
+        loss=trainer.loss_func(model_out.double(),inputs['dists'].double())
+        loss.backward()
+        trainer.optimizer.step()
+        trainer.lr_scheduler.step()
+        print(loss)
+
 
 
 
