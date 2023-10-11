@@ -2,6 +2,7 @@ import torch.nn.functional as F
 from torch import nn, Tensor
 import torch
 import math
+from torch.nn import TransformerEncoder, TransformerEncoderLayer
 
 #used to get position embedding of locations of a 2D array (eg. an image)
 #copied from keypoint transformer https://github.com/shreyashampali/kypt_transformer
@@ -53,6 +54,10 @@ class Model(nn.Module):
         self.position_embedding = PositionEmbeddingSine(16, normalize=True)
         mask=torch.zeros((1,1,conf.pos_embed_size,conf.pos_embed_size))
         self.pos=self.position_embedding(mask)
+        self.joint_embed = nn.Embedding(conf.datasets.freihand.num_joints, conf.datasets.freihand.joint_embed_dim)
+        encoder_layers = TransformerEncoderLayer(d_model=256, nhead=2, dim_feedforward=200, dropout=0.2)
+        self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers=2)
+        self.linear = nn.Linear(256, 1)
 
     def get_pos_embedding(self,inputs):
         #get root-relative 2D focal-distance normalized coordinates
@@ -69,11 +74,19 @@ class Model(nn.Module):
         bs=inputs['uv'].shape[0]
         pos=torch.repeat_interleave(self.pos,repeats=bs,dim=0)
         positions=nn.functional.grid_sample(pos,grids,mode='nearest', align_corners=True).squeeze(2)
+        positions=positions.permute(0,2,1)
         return positions
+    
 
 
     def forward(self,inputs):
         pos_embeddings=self.get_pos_embedding(inputs)
+        joint_embeddings=self.joint_embed.weight
+        joint_embeddings=torch.unsqueeze(joint_embeddings,dim=0)
+        joint_embeddings=torch.repeat_interleave(joint_embeddings,repeats=pos_embeddings.shape[0],dim=0)
+        inputs=torch.cat([pos_embeddings,joint_embeddings],dim=-1)
+        encoder_out=self.transformer_encoder(inputs)
+        pred=self.linear(encoder_out)
         print('here')
 
 
