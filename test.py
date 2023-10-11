@@ -108,7 +108,8 @@
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import data.FreiHAND.dataset as dataset
-import utils
+import utils.utils as utils
+from utils.tasks import Trainer
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(conf : DictConfig) -> None:
@@ -122,14 +123,19 @@ def my_app(conf : DictConfig) -> None:
 if __name__ == "__main__":
     my_app()
 
-dl=utils.get_dataloaders(c)['train']
+# dl=utils.get_dataloaders(c)['train']
+
+trainer=Trainer(c)
+trainer._make_model()
+trainer._make_dataloader()
+
+print('end')
 
 
-sample=next(iter(dl))
-from models import model
-model=model.Model(c)
-model(sample)
 
+
+
+    
 
 # import torch
 # import torch.nn as nn

@@ -5,6 +5,11 @@ mode: [training]
 
 train:
   dataset: freihand
+  num_thread: 1
+  lr: 0.001
+  lr_drop: 
+  lr_dec_factor: 0.5
+  lr_decay_step: 100
 
 datasets:
   freihand:
