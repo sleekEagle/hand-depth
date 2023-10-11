@@ -49,15 +49,19 @@ class Model(nn.Module):
     def __init__(self,conf):
         super(Model, self).__init__()
         self.conf=conf
+        dataset_conf=conf.datasets[conf.dataset]
 
         #obtain positional encoding
         self.position_embedding = PositionEmbeddingSine(16, normalize=True)
-        mask=torch.zeros((1,1,conf.pos_embed_size,conf.pos_embed_size))
+        mask=torch.zeros((1,1,dataset_conf.model.pos_embed_size,dataset_conf.model.pos_embed_size))
         self.pos=self.position_embedding(mask)
-        self.joint_embed = nn.Embedding(conf.datasets.freihand.num_joints, conf.datasets.freihand.joint_embed_dim)
-        encoder_layers = TransformerEncoderLayer(d_model=256, nhead=2, dim_feedforward=200, dropout=0.2)
-        self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers=2)
-        self.linear = nn.Linear(256, 1)
+        self.joint_embed = nn.Embedding(dataset_conf.num_joints, dataset_conf.joint_embed_dim)
+        encoder_layers = TransformerEncoderLayer(d_model=dataset_conf.model.encoder.d_model,
+                                                  nhead=dataset_conf.model.encoder.nhead, 
+                                                  dim_feedforward=dataset_conf.model.encoder.dim_feedforward, 
+                                                  dropout=dataset_conf.model.encoder.dropout)
+        self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers=dataset_conf.model.encoder.num_layers)
+        self.linear = nn.Linear(dataset_conf.model.encoder.d_model, 1)
 
     def get_pos_embedding(self,inputs):
         #get root-relative 2D focal-distance normalized coordinates
@@ -76,7 +80,6 @@ class Model(nn.Module):
         positions=nn.functional.grid_sample(pos,grids,mode='nearest', align_corners=True).squeeze(2)
         positions=positions.permute(0,2,1)
         return positions
-    
 
 
     def forward(self,inputs):
@@ -87,7 +90,7 @@ class Model(nn.Module):
         inputs=torch.cat([pos_embeddings,joint_embeddings],dim=-1)
         encoder_out=self.transformer_encoder(inputs)
         pred=self.linear(encoder_out)
-        print('here')
+        return pred
 
 
 
