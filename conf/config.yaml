@@ -1,3 +1,35 @@
+#hyperparameter tuning 
+defaults:
+  - override hydra/sweeper: nevergrad
+
+hydra:
+  sweeper:
+    optim:
+      # name of the nevergrad optimizer to use
+      # OnePlusOne is good at low budget, but may converge early
+      optimizer: OnePlusOne
+      # total number of function evaluations to perform
+      budget: 100
+      # number of parallel workers for performing function evaluations
+      num_workers: 1
+      # maximize: true  # comment out for maximization
+    # default parametrization of the search space
+    parametrization:
+      datasets.freihand.bs:
+        lower: 4
+        upper: 16
+        integer: true
+      datasets.freihand.model.encoder.nhead:
+        lower: 1
+        upper: 8
+        integer: true
+      datasets.freihand.model.encoder.num_layers:
+        lower: 1
+        upper: 8
+        integer: true
+
+# ****** end of hyper parameter tuning****
+
 data_dir: C:\Users\lahir\Downloads\
 dataset: freihand
 # mode: training or evaluation
@@ -10,7 +42,7 @@ train:
   lr_drop: 
   lr_dec_factor: 0.5
   lr_decay_step: 100
-  n_epochs: 1000
+  n_epochs: 1
   eval_freq: 1
 
 datasets:
@@ -20,15 +52,17 @@ datasets:
     get_mask: False
     bs : 12
     num_joints: 21
-    joint_embed_dim: 224
     model: 
-      pos_embed_size: 224
+      pos_mask_size: 224
       encoder:
         nhead : 2
-        dim_feedforward: 200
+        dim_feedforward: 100
         dropout: 0.2
-        d_model: 256
         num_layers: 2
+        #this is for a single dimention. *2 for the full positional embedding
+        pos_embed_dim: 16
+        joint_embed_dim: 224
+        #d_model = pose_embed*2 + joint_embed
       
     joint_idx:
       root : 0

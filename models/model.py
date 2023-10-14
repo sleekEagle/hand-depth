@@ -52,16 +52,17 @@ class Model(nn.Module):
         dataset_conf=conf.datasets[conf.dataset]
 
         #obtain positional encoding
-        self.position_embedding = PositionEmbeddingSine(16, normalize=True)
-        mask=torch.zeros((1,1,dataset_conf.model.pos_embed_size,dataset_conf.model.pos_embed_size))
+        self.position_embedding = PositionEmbeddingSine(dataset_conf.model.encoder.pos_embed_dim, normalize=True)
+        mask=torch.zeros((1,1,dataset_conf.model.pos_mask_size,dataset_conf.model.pos_mask_size))
         self.pos=self.position_embedding(mask)
-        self.joint_embed = nn.Embedding(dataset_conf.num_joints, dataset_conf.joint_embed_dim)
-        encoder_layers = TransformerEncoderLayer(d_model=dataset_conf.model.encoder.d_model,
+        self.joint_embed = nn.Embedding(dataset_conf.num_joints, dataset_conf.model.encoder.joint_embed_dim)
+        d_model=dataset_conf.model.encoder.pos_embed_dim*2 + dataset_conf.model.encoder.joint_embed_dim
+        encoder_layers = TransformerEncoderLayer(d_model=d_model,
                                                   nhead=dataset_conf.model.encoder.nhead, 
                                                   dim_feedforward=dataset_conf.model.encoder.dim_feedforward, 
                                                   dropout=dataset_conf.model.encoder.dropout)
         self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers=dataset_conf.model.encoder.num_layers)
-        self.linear = nn.Linear(dataset_conf.model.encoder.d_model, 1)
+        self.linear = nn.Linear(d_model, 1)
 
     def get_pos_embedding(self,inputs):
         #get root-relative 2D focal-distance normalized coordinates
@@ -90,6 +91,7 @@ class Model(nn.Module):
         inputs=torch.cat([pos_embeddings,joint_embeddings],dim=-1)
         encoder_out=self.transformer_encoder(inputs)
         pred=self.linear(encoder_out)
+        pred=pred.squeeze(dim=-1)
         return pred
 
 

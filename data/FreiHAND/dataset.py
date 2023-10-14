@@ -1,7 +1,7 @@
 from __future__ import print_function, unicode_literals
 import matplotlib.pyplot as plt
 from data.FreiHAND.fh_utils import *
-import utils
+import utils.utils as utils
 from torch.utils.data import Dataset
 import random
 

@@ -110,41 +110,39 @@ from omegaconf import DictConfig, OmegaConf
 import data.FreiHAND.dataset as dataset
 import utils.utils as utils
 from utils.tasks import Trainer,Tester
+# import wandb
+import random
+
+# wandb.login()
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
-def main(conf : DictConfig) -> None:
+def train(conf : DictConfig) -> None:
     print(OmegaConf.to_yaml(conf))
-    global c
-    c=conf
 
-    trainer=Trainer(c)
+    trainer=Trainer(conf)
     trainer._make_model()
     trainer._make_dataloader()
 
-    tester=Tester(c)
+    tester=Tester(conf)
     tester._make_dataloader()
 
     tester.set_model(trainer.model)
-    tester.evaluate()
+    # rmse_error=tester.evaluate()
 
-    for epoch in range(c.train.n_epochs):
+    for epoch in range(conf.train.n_epochs):
         print(f'Starting epoch {epoch}')
-        for itr,inputs in enumerate(trainer.data_loader):
-            trainer.optimizer.zero_grad()
-            model_out=trainer.model(inputs)
-            loss=trainer.loss_func(model_out.double(),inputs['dists'].double())
-            loss.backward()
-            trainer.optimizer.step()
-            trainer.lr_scheduler.step()
-            # print(itr/len(trainer.data_loader))
-        
+        trainer.train_epoch()        
         if (epoch+1)%conf.train.eval_freq==0:
             tester.set_model(trainer.model)
-            tester.evaluate()
+            rmse_error=tester.evaluate()
+            print(f"evaluation RMSE = {rmse_error}")
+    # rmse_error=random.randint(1,300) 
+    # print(f"evaluation RMSE = {rmse_error}")
+    return rmse_error
         
 
 if __name__ == "__main__":
-    main()
+    train()
 
 # dl=utils.get_dataloaders(c)['train']
 

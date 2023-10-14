@@ -5,4 +5,6 @@
 *.ckpt
 *.pth
 outputs\*
+multirun\*
+
 
