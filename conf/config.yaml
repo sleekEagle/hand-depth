@@ -54,8 +54,10 @@ train:
 datasets:
   freihand:
     base_path: 'C:\\Users\\lahir\\Downloads\\'
-    version: -1
+    version: gs
     get_mask: False
+    get_image: True
+    unet_annot: True
     bs : 12
     num_joints: 21
     personal_embed_dim: 128

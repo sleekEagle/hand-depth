@@ -102,49 +102,88 @@ class FreiHAND(Dataset):
         # load annotations
         self.mode=mode
         self.base_path=os.path.join(conf.datasets.freihand.base_path,f"FreiHAND_pub_v2_{self.mode}")
-        self.db_data_anno = list(load_db_annotation(self.base_path,self.mode))
-        #the only version that makes sense for the evaluation set is the 0th choice
+        if conf.datasets.freihand.unet_annot:
+            self.db_data_anno,self.unet_annot = load_db_annotation(self.base_path,mode,self.conf.datasets.freihand.unet_annot)
+            self.db_data_anno=list(self.db_data_anno)
+        else:
+            self.db_data_anno = list(load_db_annotation(self.base_path,self.mode))
+
+        #load the coco split files
         if self.mode=='evaluation':
+            coco_path=os.path.join(self.base_path,'freihand_eval_coco.json')
+            #the only version that makes sense for the evaluation set is the 0th choice
             self.version=sample_version.valid_options()[0]
             self.get_mask=False
         else:
+            coco_path=os.path.join(self.base_path,'freihand_train_coco.json')
             self.version=conf.datasets.freihand.version
             self.get_mask=conf.datasets.freihand.get_mask
+
+        with open(coco_path, 'r') as fi:
+            self.coco = json.load(fi)['images']
         
-        print(f'length of the dataset : {len(self.db_data_anno)}')
+        print(f'length of the dataset : {len(list(self.db_data_anno))}')
         print(f'image version used : {self.version}')
+    
+    def get_unet_annot(self,idx):
+        version=self.version
+        set_name=self.mode
+
+        if version==-1:
+            versions=sample_version.valid_options()
+            version=random.choice(versions)
+
+        if version is None:
+            version = sample_version.gs
+
+        if set_name == 'evaluation':
+            assert version == sample_version.gs, 'This the only valid choice for samples from the evaluation split.'
+
+        unet_idx=sample_version.map_id(idx, version)
+        return self.unet_annot[unet_idx]
+
 
     def __len__(self):
-        return len(self.db_data_anno)
+        return len(list(self.db_data_anno))
 
     def __getitem__(self, idx): 
         #randomly select one of the versions to get data
-        if self.version==-1:
-            versions=sample_version.valid_options()
-            version=random.choice(versions)
-        else:
-            version=self.version
-        img = read_img(idx, self.base_path,self.mode, version)
+        # if self.version==-1:
+        #     versions=sample_version.valid_options()
+        #     version=random.choice(versions)
+        # else:
+        #     version=self.version
         
+        #chose the index based on coco file
+        coco_idx=self.coco[idx]['db_idx']
 
         # annotation for this frame
-        K, mano, xyz = self.db_data_anno[idx]
+        K, mano, xyz = self.db_data_anno[coco_idx]
         K, mano, xyz = [np.array(x) for x in [K, mano, xyz]]
         uv = projectPoints(xyz, K)
         values={}
-        values['img']=img
-        # values['msk']=msk
+        if self.conf.datasets.freihand.get_image:
+            img_pth=os.path.join(self.base_path,self.coco[idx]['file_name'])
+            img=read_img_from_pth(img_pth)
+            # img = read_img(idx, self.base_path,self.mode, version)
+            values['img']=img
+        if self.conf.datasets.freihand.get_mask:
+            values['msk']=msk
         values['K']=K
         values['xyz']=xyz
         values['uv']=uv
         if self.get_mask:
-            msk = read_msk(idx, self.base_path)
+            msk = read_msk(coco_idx, self.base_path)
             values['msk']=msk
         dists=utils.get_euclidian_dist_pt(xyz)
         values['dists']=dists
         xyz_=np.moveaxis(xyz,1,0)
         xyz_=np.expand_dims(xyz_,-1)
         values['hand_dim']=utils.get_hand_dims(xyz_,self.conf)[:,0]
+        #get 2D keypoint annotations generated with unet
+        if self.conf.datasets.freihand.unet_annot:
+            annot=self.get_unet_annot(idx)
+            values['unet_annot']=np.array(annot['keypoints'])
         return values
     
 def get_dist(dataset):

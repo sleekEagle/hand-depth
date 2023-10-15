@@ -117,7 +117,7 @@ def db_size(set_name):
         assert 0, 'Invalid choice.'
 
 
-def load_db_annotation(base_path, set_name=None):
+def load_db_annotation(base_path, set_name=None,get_unet_annot=False):
     if set_name is None:
         # only training set annotations are released so this is a valid default choice
         set_name = 'training'
@@ -129,19 +129,32 @@ def load_db_annotation(base_path, set_name=None):
     k_path = os.path.join(base_path, '%s_K.json' % set_name)
     mano_path = os.path.join(base_path, '%s_mano.json' % set_name)
     xyz_path = os.path.join(base_path, '%s_xyz.json' % set_name)
+    if get_unet_annot:
+        if set_name=='training':
+            unet_path=os.path.join(base_path, 'hrnet_output_on_trainset.json')
+            print(f'training basepath: {base_path}')
+        elif set_name=='evaluation':
+            unet_path=os.path.join(base_path, 'hrnet_output_on_testset.json')
+            print(f'evaluation basepath: {base_path}')
 
     # load if exist
     K_list = json_load(k_path)
     mano_list = json_load(mano_path)
     xyz_list = json_load(xyz_path)
+    if get_unet_annot:
+        unet_preds=json_load(unet_path)
+        # [print(i,item['image_id']) for i,item in enumerate(unet_preds)]
+        # print(f'len unet: {len(unet_preds)}')
 
     # should have all the same length
     assert len(K_list) == len(mano_list), 'Size mismatch.'
     assert len(K_list) == len(xyz_list), 'Size mismatch.'
 
     print('Loading of %d samples done in %.2f seconds' % (len(K_list), time.time()-t))
-    return zip(K_list, mano_list, xyz_list)
-
+    if get_unet_annot:
+        return zip(K_list, mano_list, xyz_list),unet_preds
+    else:
+        return zip(K_list, mano_list, xyz_list)
 
 class sample_version:
     gs = 'gs'  # green screen
@@ -180,6 +193,9 @@ def read_img(idx, base_path, set_name, version=None):
     _assert_exist(img_rgb_path)
     return io.imread(img_rgb_path)
 
+def read_img_from_pth(path):
+    _assert_exist(path)
+    return io.imread(path)
 
 def read_msk(idx, base_path):
     mask_path = os.path.join(base_path, 'training', 'mask',
