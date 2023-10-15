@@ -3,6 +3,7 @@ from torch import nn, Tensor
 import torch
 import math
 from torch.nn import TransformerEncoder, TransformerEncoderLayer
+import utils.utils
 
 #used to get position embedding of locations of a 2D array (eg. an image)
 #copied from keypoint transformer https://github.com/shreyashampali/kypt_transformer
@@ -50,19 +51,35 @@ class Model(nn.Module):
         super(Model, self).__init__()
         self.conf=conf
         dataset_conf=conf.datasets[conf.dataset]
+        self.num_joints=dataset_conf.num_joints
 
         #obtain positional encoding
         self.position_embedding = PositionEmbeddingSine(dataset_conf.model.encoder.pos_embed_dim, normalize=True)
         mask=torch.zeros((1,1,dataset_conf.model.pos_mask_size,dataset_conf.model.pos_mask_size))
         self.pos=self.position_embedding(mask)
-        self.joint_embed = nn.Embedding(dataset_conf.num_joints, dataset_conf.model.encoder.joint_embed_dim)
-        d_model=dataset_conf.model.encoder.pos_embed_dim*2 + dataset_conf.model.encoder.joint_embed_dim
+        self.joint_embed = nn.Embedding(self.num_joints, dataset_conf.model.encoder.joint_embed_dim)
+
+        if conf.train.hand_dim.use_hand_dim:
+            if conf.train.hand_dim.early_embed_fusion:
+                d_model=dataset_conf.model.encoder.pos_embed_dim*2 + dataset_conf.model.encoder.joint_embed_dim
+                self.early_linear = nn.Linear(self.num_joints-1 +
+                                            dataset_conf.model.encoder.pos_embed_dim*2 +
+                                            dataset_conf.model.encoder.joint_embed_dim ,
+                                            d_model)
+            else:
+                d_model=dataset_conf.model.encoder.pos_embed_dim*2+dataset_conf.model.encoder.joint_embed_dim+self.num_joints-1
+        else:
+            d_model=dataset_conf.model.encoder.pos_embed_dim*2 + dataset_conf.model.encoder.joint_embed_dim
+
+        
         encoder_layers = TransformerEncoderLayer(d_model=d_model,
-                                                  nhead=dataset_conf.model.encoder.nhead, 
-                                                  dim_feedforward=dataset_conf.model.encoder.dim_feedforward, 
-                                                  dropout=dataset_conf.model.encoder.dropout)
+                                                nhead=dataset_conf.model.encoder.nhead, 
+                                                dim_feedforward=dataset_conf.model.encoder.dim_feedforward, 
+                                                dropout=dataset_conf.model.encoder.dropout)
         self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers=dataset_conf.model.encoder.num_layers)
         self.linear = nn.Linear(d_model, 1)
+
+
 
     def get_pos_embedding(self,inputs):
         #get root-relative 2D focal-distance normalized coordinates
@@ -85,11 +102,19 @@ class Model(nn.Module):
 
     def forward(self,inputs):
         pos_embeddings=self.get_pos_embedding(inputs)
+        bs=pos_embeddings.shape[0]
         joint_embeddings=self.joint_embed.weight
         joint_embeddings=torch.unsqueeze(joint_embeddings,dim=0)
-        joint_embeddings=torch.repeat_interleave(joint_embeddings,repeats=pos_embeddings.shape[0],dim=0)
-        inputs=torch.cat([pos_embeddings,joint_embeddings],dim=-1)
-        encoder_out=self.transformer_encoder(inputs)
+        joint_embeddings=torch.repeat_interleave(joint_embeddings,repeats=bs,dim=0)
+        if self.conf.train.hand_dim.use_hand_dim:
+            hand_dims=inputs['hand_dim'].to(torch.float32)
+            hand_dims=torch.unsqueeze(hand_dims,dim=1).repeat_interleave(repeats=self.num_joints,dim=1)
+            features=torch.cat([pos_embeddings,joint_embeddings,hand_dims],dim=-1)                
+            if self.conf.train.hand_dim.early_embed_fusion:
+                features=self.early_linear(features)
+        else:
+            features=torch.cat([pos_embeddings,joint_embeddings],dim=-1)
+        encoder_out=self.transformer_encoder(features)
         pred=self.linear(encoder_out)
         pred=pred.squeeze(dim=-1)
         return pred

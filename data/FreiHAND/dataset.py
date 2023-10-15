@@ -98,6 +98,7 @@ array([[483.79409933,   0.        , 112.        ],
 '''
 class FreiHAND(Dataset):
     def __init__(self,conf,mode):
+        self.conf=conf
         # load annotations
         self.mode=mode
         self.base_path=os.path.join(conf.datasets.freihand.base_path,f"FreiHAND_pub_v2_{self.mode}")
@@ -141,6 +142,9 @@ class FreiHAND(Dataset):
             values['msk']=msk
         dists=utils.get_euclidian_dist_pt(xyz)
         values['dists']=dists
+        xyz_=np.moveaxis(xyz,1,0)
+        xyz_=np.expand_dims(xyz_,-1)
+        values['hand_dim']=utils.get_hand_dims(xyz_,self.conf)[:,0]
         return values
     
 def get_dist(dataset):

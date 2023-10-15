@@ -44,6 +44,12 @@ train:
   lr_decay_step: 100
   n_epochs: 1
   eval_freq: 1
+  #oarameters for how to incorporate hand dimentions
+  hand_dim:
+    use_hand_dim: true
+    early_fusion: false
+    early_embed_fusion: true
+    late_fusion: false
 
 datasets:
   freihand:
@@ -52,6 +58,7 @@ datasets:
     get_mask: False
     bs : 12
     num_joints: 21
+    personal_embed_dim: 128
     model: 
       pos_mask_size: 224
       encoder:
