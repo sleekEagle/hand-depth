@@ -19,14 +19,14 @@ hydra:
         lower: 4
         upper: 5
         integer: true
-      # datasets.freihand.model.encoder.nhead:
-      #   lower: 1
-      #   upper: 8
-      #   integer: true
-      # datasets.freihand.model.encoder.num_layers:
-      #   lower: 1
-      #   upper: 8
-      #   integer: true
+      datasets.freihand.model.encoder.nhead:
+        lower: 1
+        upper: 8
+        integer: true
+      datasets.freihand.model.encoder.num_layers:
+        lower: 1
+        upper: 8
+        integer: true
 
 # ****** end of hyper parameter tuning****
 
@@ -46,7 +46,7 @@ train:
   lr_decay_step: 100
   n_epochs: 1
   eval_freq: 1
-  #oarameters for how to incorporate hand dimentions
+  #parameters for how to incorporate hand dimentions
   hand_dim:
     use_hand_dim: true
     early_fusion: false
