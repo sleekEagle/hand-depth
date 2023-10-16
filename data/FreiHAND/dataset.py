@@ -125,7 +125,7 @@ class FreiHAND(Dataset):
         print(f'length of the dataset : {len(list(self.db_data_anno))}')
         print(f'image version used : {self.version}')
     
-    def get_unet_annot(self,idx):
+    def get_hrnet_annot(self,idx):
         version=self.version
         set_name=self.mode
 
@@ -182,7 +182,7 @@ class FreiHAND(Dataset):
         values['hand_dim']=utils.get_hand_dims(xyz_,self.conf)[:,0]
         #get 2D keypoint annotations generated with unet
         if self.conf.datasets.freihand.unet_annot:
-            annot=self.get_unet_annot(idx)
+            annot=self.get_hrnet_annot(idx)
             values['unet_annot']=np.array(annot['keypoints'])
         return values
     

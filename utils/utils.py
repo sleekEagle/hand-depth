@@ -1,13 +1,13 @@
 import numpy as np
 
-joint_idx={
-    'root':0,
-    'little': {'mcp':1, 'pip':2, 'dip':3, 'tip':4},
-    'ring': {'mcp':5, 'pip':6, 'dip':7, 'tip':8},
-    'middle': {'mcp':9, 'pip':10, 'dip':11, 'tip':12},
-    'index': {'mcp':13, 'pip':14, 'dip':15, 'tip':16},
-    'thumb': {'mcp':17, 'pip':18, 'dip':19, 'tip':20}
-}
+# joint_idx={
+#     'root':0,
+#     'little': {'mcp':1, 'pip':2, 'dip':3, 'tip':4},
+#     'ring': {'mcp':5, 'pip':6, 'dip':7, 'tip':8},
+#     'middle': {'mcp':9, 'pip':10, 'dip':11, 'tip':12},
+#     'index': {'mcp':13, 'pip':14, 'dip':15, 'tip':16},
+#     'thumb': {'mcp':17, 'pip':18, 'dip':19, 'tip':20}
+# }
 
 #subtract the root coordinate of each sample from the joint coordinates
 # joint_coords : np.array of shape (3, n_joints, n_samples)
@@ -43,29 +43,45 @@ for 21 joints there will be 20 distances
 
 items returned:
 0: little_mcp - root
-1: little_pip - root
-2: little_dip - root
-3: little_tip - root
+1: little_pip - little_mcp
+2: little_dip - little_pip
+3: little_tip - little_dip
 4: ring_mcp - root
 .....
 
 kypts: np array of shape (3,n_joints,n_samples)
 
 '''
-def get_hand_dims(kypts):
+def get_hand_dims(kypts,conf):
+    joint_idx=conf.datasets[conf.dataset].joint_idx
     hand_dim=np.empty((0, kypts.shape[-1]))
     for key in joint_idx.keys():
-        if key=='root': continue
+        if key=='root': continue        
 
+        #for each finger
         rel=(get_euclidian_dist(kypts[:,joint_idx[key]['mcp'],:],kypts[:,joint_idx['root'],:]))
+        # print(f'root {rel}')
         rel=np.expand_dims(rel,axis=0)
         hand_dim=np.append(hand_dim,rel,axis=0)
-        for subkey in joint_idx[key].keys():
-            if subkey=='mcp':  continue
 
-            rel=(get_euclidian_dist(kypts[:,joint_idx[key][subkey],:],kypts[:,joint_idx[key]['mcp'],:]))
-            rel=np.expand_dims(rel,axis=0)
-            hand_dim=np.append(hand_dim,rel,axis=0)
+        #MCP to pip distance
+        rel=(get_euclidian_dist(kypts[:,joint_idx[key]['pip'],:],kypts[:,joint_idx[key]['mcp'],:]))
+        # print(f'pip mcp {rel}')
+        rel=np.expand_dims(rel,axis=0)
+        hand_dim=np.append(hand_dim,rel,axis=0)
+
+        #pip to dip distance
+        rel=(get_euclidian_dist(kypts[:,joint_idx[key]['dip'],:],kypts[:,joint_idx[key]['pip'],:]))
+        # print(f'dip pip {rel}')
+        rel=np.expand_dims(rel,axis=0)
+        hand_dim=np.append(hand_dim,rel,axis=0)
+
+        #dip to tip distance
+        rel=(get_euclidian_dist(kypts[:,joint_idx[key]['tip'],:],kypts[:,joint_idx[key]['dip'],:]))
+        # print(f'dip tip {rel}')
+        rel=np.expand_dims(rel,axis=0)
+        hand_dim=np.append(hand_dim,rel,axis=0)
+
     return hand_dim
 
 
