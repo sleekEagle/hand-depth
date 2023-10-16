@@ -59,7 +59,9 @@ datasets:
     version: gs
     get_mask: False
     get_image: True
-    unet_annot: True
+    hrnet_annot: True
+    #do we train on GT keypoints? false: train on hrnet keypoints
+    gt_kpt_train: false
     bs : 12
     num_joints: 21
     personal_embed_dim: 128

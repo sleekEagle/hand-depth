@@ -81,18 +81,23 @@ class Model(nn.Module):
         self.linear = nn.Linear(d_model, 1)
 
     def get_pos_embedding(self,inputs):
+        if self.conf.datasets[self.conf.dataset].gt_kpt_train:
+            kypts=inputs['uv']
+        else:
+            kypts=inputs['unet_annot']
+
         #get root-relative 2D focal-distance normalized coordinates
-        roots=torch.repeat_interleave(torch.unsqueeze(inputs['uv'][:,0,:],dim=1),repeats=inputs['uv'].shape[1],dim=1)
+        roots=torch.repeat_interleave(torch.unsqueeze(kypts[:,0,:],dim=1),repeats=kypts.shape[1],dim=1)
         fx=inputs['K'][:,0,0]
         fy=inputs['K'][:,1,1]
         fx=torch.unsqueeze(fx,dim=1).unsqueeze(dim=2)
-        fx=torch.repeat_interleave(fx,repeats=inputs['uv'].shape[1],dim=1)
+        fx=torch.repeat_interleave(fx,repeats=kypts.shape[1],dim=1)
         fy=torch.unsqueeze(fy,dim=1).unsqueeze(dim=2)
-        fy=torch.repeat_interleave(fy,repeats=inputs['uv'].shape[1],dim=1)
+        fy=torch.repeat_interleave(fy,repeats=kypts.shape[1],dim=1)
         f=torch.concat((fx,fy),dim=-1)
-        rel_coord=(inputs['uv']-roots)/f
+        rel_coord=(kypts-roots)/f
         grids=torch.unsqueeze(rel_coord,dim=1).float()
-        bs=inputs['uv'].shape[0]
+        bs=kypts.shape[0]
         pos=torch.repeat_interleave(self.pos,repeats=bs,dim=0)
         positions=nn.functional.grid_sample(pos,grids,mode='nearest', align_corners=True).squeeze(2)
         positions=positions.permute(0,2,1)
