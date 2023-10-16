@@ -34,6 +34,8 @@ data_dir: C:\Users\lahir\Downloads\
 dataset: freihand
 # mode: training or evaluation
 mode: [training]
+#if true, try to use the GPU if available. false: do not use GPU even if its availabel
+use_gpu: true
 
 train:
   dataset: freihand

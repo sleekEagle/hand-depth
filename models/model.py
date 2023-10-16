@@ -47,9 +47,10 @@ class PositionEmbeddingSine(nn.Module):
         return pos
 
 class Model(nn.Module):
-    def __init__(self,conf):
+    def __init__(self,conf,device):
         super(Model, self).__init__()
         self.conf=conf
+        self.device=device
         dataset_conf=conf.datasets[conf.dataset]
         self.num_joints=dataset_conf.num_joints
 
@@ -79,8 +80,6 @@ class Model(nn.Module):
         self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers=dataset_conf.model.encoder.num_layers)
         self.linear = nn.Linear(d_model, 1)
 
-
-
     def get_pos_embedding(self,inputs):
         #get root-relative 2D focal-distance normalized coordinates
         roots=torch.repeat_interleave(torch.unsqueeze(inputs['uv'][:,0,:],dim=1),repeats=inputs['uv'].shape[1],dim=1)
@@ -101,7 +100,7 @@ class Model(nn.Module):
 
 
     def forward(self,inputs):
-        pos_embeddings=self.get_pos_embedding(inputs)
+        pos_embeddings=self.get_pos_embedding(inputs).to(self.device)
         bs=pos_embeddings.shape[0]
         joint_embeddings=self.joint_embed.weight
         joint_embeddings=torch.unsqueeze(joint_embeddings,dim=0)
@@ -109,6 +108,7 @@ class Model(nn.Module):
         if self.conf.train.hand_dim.use_hand_dim:
             hand_dims=inputs['hand_dim'].to(torch.float32)
             hand_dims=torch.unsqueeze(hand_dims,dim=1).repeat_interleave(repeats=self.num_joints,dim=1)
+            hand_dims=hand_dims.to(self.device)
             features=torch.cat([pos_embeddings,joint_embeddings,hand_dims],dim=-1)                
             if self.conf.train.hand_dim.early_embed_fusion:
                 features=self.early_linear(features)

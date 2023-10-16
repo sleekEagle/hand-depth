@@ -8,6 +8,12 @@ class Trainer():
     def __init__(self,conf):
         self.conf=conf
         self.loss_func=nn.MSELoss()
+        if conf.use_gpu:
+            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device='cpu'
+        print(f'using device {self.device}')
+
 
     def get_optimizer(self,model):
         model_params=[p for n, p in model.named_parameters() if p.requires_grad]
@@ -19,7 +25,8 @@ class Trainer():
         return optimizer, lr_scheduler
     
     def _make_model(self):
-        self.model=model.Model(self.conf)
+        self.model=model.Model(self.conf,self.device)
+        self.model.to(self.device)
         self.optimizer, self.lr_scheduler = self.get_optimizer(self.model)
         
     def _make_dataloader(self):
@@ -33,7 +40,7 @@ class Trainer():
         for itr,inputs in enumerate(self.data_loader):
             self.optimizer.zero_grad()
             model_out=self.model(inputs)
-            loss=self.loss_func(model_out.double(),inputs['dists'].double())
+            loss=self.loss_func(model_out.double(),(inputs['dists'].double()).to(self.device))
             loss.backward()
             self.optimizer.step()
             self.lr_scheduler.step()
@@ -42,6 +49,10 @@ class Trainer():
 class Tester():
     def __init__(self,conf):
         self.conf=conf
+        if conf.use_gpu:
+            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device='cpu'
     
     def _make_dataloader(self):
         d_eval=dataset.FreiHAND(self.conf,mode='evaluation')
@@ -54,10 +65,10 @@ class Tester():
         self.model=model
     
     def evaluate(self):
-        errors=torch.tensor(0.0)
+        errors=torch.tensor(0.0).to(self.device)
         for itr,inputs in enumerate(self.data_loader):
             model_out=self.model(inputs)
-            gt_depth=inputs['dists']
+            gt_depth=inputs['dists'].to(self.device)
             rmse=torch.sqrt(torch.mean(torch.square(model_out-gt_depth)))
             errors+=rmse
         rmse_error=errors/len(self.data_loader)
