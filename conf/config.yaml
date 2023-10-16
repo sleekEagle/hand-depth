@@ -19,10 +19,10 @@ hydra:
         - 4
         - 8
       datasets.freihand.model.encoder.nhead:
-        -1
-        -2
-        -4
-        -8
+        - 1
+        - 2
+        - 4
+        - 8
       datasets.freihand.model.encoder.num_layers:
         lower: 1
         upper: 8
