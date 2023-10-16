@@ -17,16 +17,16 @@ hydra:
     parametrization:
       datasets.freihand.bs:
         lower: 4
-        upper: 16
+        upper: 5
         integer: true
-      datasets.freihand.model.encoder.nhead:
-        lower: 1
-        upper: 8
-        integer: true
-      datasets.freihand.model.encoder.num_layers:
-        lower: 1
-        upper: 8
-        integer: true
+      # datasets.freihand.model.encoder.nhead:
+      #   lower: 1
+      #   upper: 8
+      #   integer: true
+      # datasets.freihand.model.encoder.num_layers:
+      #   lower: 1
+      #   upper: 8
+      #   integer: true
 
 # ****** end of hyper parameter tuning****
 
