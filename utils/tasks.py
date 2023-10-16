@@ -43,7 +43,7 @@ class Trainer():
             loss=self.loss_func(model_out.double(),(inputs['dists'].double()).to(self.device))
             loss.backward()
             self.optimizer.step()
-            self.lr_scheduler.step()
+        self.lr_scheduler.step()
        
 
 class Tester():
