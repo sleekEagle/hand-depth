@@ -9,7 +9,7 @@ hydra:
       # OnePlusOne is good at low budget, but may converge early
       optimizer: OnePlusOne
       # total number of function evaluations to perform
-      budget: 90
+      budget: 75
       # number of parallel workers for performing function evaluations
       num_workers: 1
       # maximize: true  # comment out for maximization
@@ -19,9 +19,10 @@ hydra:
         - 4
         - 8
       datasets.freihand.model.encoder.nhead:
-        lower: 1
-        upper: 8
-        integer: true
+        -1
+        -2
+        -4
+        -8
       datasets.freihand.model.encoder.num_layers:
         lower: 1
         upper: 8
