@@ -9,7 +9,7 @@ hydra:
       # OnePlusOne is good at low budget, but may converge early
       optimizer: OnePlusOne
       # total number of function evaluations to perform
-      budget: 100
+      budget: 130
       # number of parallel workers for performing function evaluations
       num_workers: 1
       # maximize: true  # comment out for maximization
