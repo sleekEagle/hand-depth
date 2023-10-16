@@ -22,8 +22,8 @@ def fix_seeds(random_seed):
 
 class Config:
     # ~~~~~~~~~~~~~~~~~~~~~~Dataset~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-    dataset = 'InterHand2.6M'  # InterHand2.6M, ho3d, h2o3d, ho3d_h2o3d
-    pose_representation = '2p5D' #3D, 2p5D, angles
+    dataset = 'ho3d'  # InterHand2.6M, ho3d, h2o3d, ho3d_h2o3d
+    pose_representation = '3D' #3D, 2p5D, angles
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
@@ -42,7 +42,7 @@ class Config:
 
 
     # ~~~~~~~~~~~~~~~~~~~~~~HO-3D paths~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-    ho3d_anno_dir = '/media/shreyas/ssd2/Dataset/HO3D_Release_Final'
+    ho3d_anno_dir = 'D:\\data\\HO3D_v2\\HO3D_v2\\HO3D_v2\\'
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 

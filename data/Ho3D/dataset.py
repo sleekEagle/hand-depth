@@ -7,23 +7,23 @@ import numpy as np
 class Ho3D(Dataset):
     def __init__(self):
         base_path='D:\data\HO3D_v2\HO3D_v2\HO3D_v2'
-        set_name='train'
+        self.set_name='evaluation'
         self.seq_len=7
-        self.set_path=os.path.join(base_path,set_name)
+        self.set_path=os.path.join(base_path,self.set_name)
 
         #get the number of files in each dir
         dir_sizes_={}
         dir_names=os.listdir(self.set_path)
         for d in dir_names:
-            n_files=len(os.listdir(os.path.join(base_path,set_name,d,'rgb')))
+            n_files=len(os.listdir(os.path.join(base_path,self.set_name,d,'rgb')))
             dir_sizes_[d]=n_files
         self.dir_sizes=dir_sizes_
 
         #read the file names
-        with open(os.path.join(base_path, set_name+'.txt')) as f:
+        with open(os.path.join(base_path, self.set_name+'.txt')) as f:
             file_list = f.readlines()
         self.file_list = [f.strip() for f in file_list]
-        assert len(file_list) == utils.db_size(set_name, 'v2'), '%s.txt is not accurate. Aborting'%set_name
+        assert len(file_list) == utils.db_size(self.set_name, 'v2'), '%s.txt is not accurate. Aborting'%self.set_name
 
     def __len__(self):
         return len(self.file_list)
@@ -41,27 +41,28 @@ class Ho3D(Dataset):
         else:
             start_pos=file_num
 
-        #extract sequences of images
+        #extract sequences of images and annotation files
         img_seq=np.empty((0,480,640,3))
+        camMats=np.empty((0,3,3))
+        if self.set_name=='training':
+            handJoints3D=np.empty((0,21,3))
+        elif self.set_name=='evaluation':
+            handJoints3D=np.empty((0,3))
+
         for pos in range(start_pos,start_pos+self.seq_len):
             img=utils.read_RGB_img(self.set_path,dir_name,f"{pos:0{4}}")
             img=np.expand_dims(img,axis=0)
             img_seq=np.concatenate((img_seq,img),axis=0)
-        #extract annotation files
-        handJoints3D=np.empty((0,21,3))
-        for pos in range(start_pos,start_pos+self.seq_len):
+
             pkl=utils.read_annotation(self.set_path,dir_name,f"{pos:0{4}}")
             hj=pkl['handJoints3D']
             hj=np.expand_dims(hj,axis=0)
             handJoints3D=np.concatenate((handJoints3D,hj),axis=0)
+            
+            cm=np.expand_dims(pkl['camMat'],axis=0)
+            camMats=np.concatenate((camMats,cm),axis=0)            
+            
         print('pkl')
-
-
-
-
-
-
-    
 
         return 1
     

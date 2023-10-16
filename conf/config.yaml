@@ -16,7 +16,6 @@ hydra:
     # default parametrization of the search space
     parametrization:
       datasets.freihand.bs:
-        - 4
         - 8
       datasets.freihand.model.encoder.nhead:
         - 1
@@ -44,7 +43,7 @@ train:
   lr_drop: 
   lr_dec_factor: 0.5
   lr_decay_step: 100
-  n_epochs: 1
+  n_epochs: 10
   eval_freq: 1
   #parameters for how to incorporate hand dimentions
   hand_dim:
