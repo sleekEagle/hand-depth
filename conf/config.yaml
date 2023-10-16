@@ -16,9 +16,8 @@ hydra:
     # default parametrization of the search space
     parametrization:
       datasets.freihand.bs:
-        lower: 4
-        upper: 8
-        integer: true
+        - 4
+        - 8
       datasets.freihand.model.encoder.nhead:
         lower: 1
         upper: 8
