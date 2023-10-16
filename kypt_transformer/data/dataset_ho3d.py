@@ -7,15 +7,15 @@
 
 import torch
 import torch.utils.data
-from common.utils.preprocessing import *
-from common.utils.transforms import world2cam, cam2pixel, pixel2cam, transformManoParamsToCam, convert_pose_to_opencv
+from kypt_transformer.common.utils.preprocessing import *
+from kypt_transformer.common.utils.transforms import world2cam, cam2pixel, pixel2cam, transformManoParamsToCam, convert_pose_to_opencv
 import json
 import smplx
 import open3d as o3d
 from tqdm import tqdm
-from common.utils.misc import get_root_rel_from_parent_rel_depths
+from kypt_transformer.common.utils.misc import get_root_rel_from_parent_rel_depths
 ih26m_joint_regressor = np.load(cfg.joint_regr_np_path)
-from common.utils.misc import my_print
+from kypt_transformer.common.utils.misc import my_print
 
 
 jointsMapManoToDefault = [
