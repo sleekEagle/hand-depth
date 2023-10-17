@@ -31,7 +31,6 @@ def train(conf : DictConfig) -> None:
     # print(f"evaluation RMSE = {rmse_error}")
     return rmse_error
         
-
 if __name__ == "__main__":
     train()
 

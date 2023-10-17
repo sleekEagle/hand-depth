@@ -7,11 +7,12 @@
 
 import os
 import os.path as osp
-from config import cfg
+from kypt_transformer.main.config import cfg
 import torch
 import torch.nn as nn
 from torchvision.models.resnet import BasicBlock, Bottleneck
-from torchvision.models.resnet import model_urls
+# from torchvision.models.resnet import model_urls
+from torchvision.models.resnet import ResNet50_Weights
 
 class ResNetBackbone(nn.Module):
 
@@ -82,7 +83,8 @@ class ResNetBackbone(nn.Module):
         return x, skip_conn_layers
 
     def init_weights(self):
-        org_resnet = torch.utils.model_zoo.load_url(model_urls[self.name])
+        # org_resnet = torch.utils.model_zoo.load_url(model_urls[self.name])
+        org_resnet = torch.utils.model_zoo.load_url(ResNet50_Weights.IMAGENET1K_V2)
         # drop orginal resnet fc layer, add 'None' in case of no fc layer, that will raise error
         org_resnet.pop('fc.weight', None)
         org_resnet.pop('fc.bias', None)

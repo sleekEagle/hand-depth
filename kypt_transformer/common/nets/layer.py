@@ -14,7 +14,7 @@ import math
 import sys
 import os
 sys.path.append(os.path.join(os.path.curdir, os.path.join('main'))) 
-from config import cfg
+from kypt_transformer.main.config import cfg
 
 def make_linear_layers(feat_dims, relu_final=True):
     layers = []
