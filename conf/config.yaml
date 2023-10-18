@@ -42,7 +42,6 @@ hydra:
 
 # ****** end of hyper parameter tuning****
 
-data_dir: C:\Users\lahir\Downloads\
 dataset: freihand
 # mode: training or evaluation
 mode: [training]
