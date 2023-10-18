@@ -20,9 +20,21 @@ hydra:
         upper: 200
         integer: true
       datasets.freihand.model.encoder.pos_embed_dim:
-        lower: 4
-        upper: 32
-        step: 2
+        - 2
+        - 4
+        - 6
+        - 8
+        - 10
+        - 12
+        - 16
+        - 18
+        - 20
+        - 22
+        - 24
+        - 26
+        - 28
+        - 30
+        - 32
         integer: true
       datasets.freihand.model.encoder.dim_feedforward:
         lower: 50
