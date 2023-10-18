@@ -35,7 +35,6 @@ hydra:
         - 28
         - 30
         - 32
-        integer: true
       datasets.freihand.model.encoder.dim_feedforward:
         lower: 50
         upper: 300

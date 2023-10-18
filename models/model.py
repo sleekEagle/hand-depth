@@ -125,6 +125,7 @@ class Model(nn.Module):
             if self.conf.train.hand_dim.late_fusion:
                 enc_out_hand=torch.cat((encoder_out,hand_dims),dim=-1)
                 pred=self.late_fusion_linear(enc_out_hand)
+
         pred=self.linear(encoder_out)
         pred=pred.squeeze(dim=-1)
         return pred

@@ -8,26 +8,25 @@ from utils.tasks import Trainer,Tester
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def train(conf : DictConfig) -> None:
-    # print(OmegaConf.to_yaml(conf))
+    print(OmegaConf.to_yaml(conf))
 
-    # trainer=Trainer(conf)
-    # trainer._make_model()
-    # trainer._make_dataloader()
+    trainer=Trainer(conf)
+    trainer._make_model()
+    trainer._make_dataloader()
 
-    # tester=Tester(conf)
-    # tester._make_dataloader()
+    tester=Tester(conf)
+    tester._make_dataloader()
 
-    # tester.set_model(trainer.model)
-    # # rmse_error=tester.evaluate()
+    tester.set_model(trainer.model)
+    # rmse_error=tester.evaluate()
 
-    # for epoch in range(conf.train.n_epochs):
-    #     print(f'Starting epoch {epoch}')
-    #     trainer.train_epoch()        
-    #     if (epoch+1)%conf.train.eval_freq==0:
-    #         tester.set_model(trainer.model)
-    #         rmse_error=tester.evaluate()
-    #         print(f"evaluation RMSE = {rmse_error}")
-    rmse_error=0
+    for epoch in range(conf.train.n_epochs):
+        print(f'Starting epoch {epoch}')
+        trainer.train_epoch()        
+        if (epoch+1)%conf.train.eval_freq==0:
+            tester.set_model(trainer.model)
+            rmse_error=tester.evaluate()
+            print(f"evaluation RMSE = {rmse_error}")
     # rmse_error=random.randint(1,300) 
     # print(f"evaluation RMSE = {rmse_error}")
     return rmse_error
