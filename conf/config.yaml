@@ -49,9 +49,10 @@ train:
   #parameters for how to incorporate hand dimentions
   hand_dim:
     use_hand_dim: true
-    early_fusion: false
-    early_embed_fusion: true
+    # are we doing ealy fusion or late fusion
     late_fusion: false
+    #when using hand_dim and early_fusion d_model is independent of pos_embed_dim and joint_embed_dim
+    d_model: 100
 
 datasets:
   freihand:
