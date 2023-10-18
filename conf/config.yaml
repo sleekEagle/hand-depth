@@ -22,6 +22,7 @@ hydra:
       datasets.freihand.model.encoder.pos_embed_dim:
         lower: 4
         upper: 32
+        step: 2
         integer: true
       datasets.freihand.model.encoder.dim_feedforward:
         lower: 50
@@ -74,8 +75,9 @@ datasets:
         dropout: 0.2
         num_layers: 1
         #this is for a single dimention. *2 for the full positional embedding
-        pos_embed_dim: 16
-        joint_embed_dim: 224
+        #pos_embedding_dim has to be an even number
+        pos_embed_dim: 22
+        joint_embed_dim: 244
         #d_model = pose_embed*2 + joint_embed
       
     joint_idx:
