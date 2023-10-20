@@ -27,6 +27,7 @@ def train(conf : DictConfig) -> None:
             tester.set_model(trainer.model)
             rmse_error=tester.evaluate()
             print(f"evaluation RMSE = {rmse_error}")
+            
     # rmse_error=random.randint(1,300) 
     # print(f"evaluation RMSE = {rmse_error}")
     return rmse_error

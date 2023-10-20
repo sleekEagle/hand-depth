@@ -15,30 +15,24 @@ hydra:
       # maximize: true  # comment out for maximization
     # default parametrization of the search space
     parametrization:
-      datasets.freihand.model.encoder.joint_embed_dim:
-        lower: 100
-        upper: 200
+      datasets.freihand.bs:
+        lower: 5
+        upper: 30
         integer: true
-      datasets.freihand.model.encoder.pos_embed_dim:
-        - 2
-        - 4
-        - 6
-        - 8
-        - 10
-        - 12
-        - 16
-        - 18
-        - 20
-        - 22
-        - 24
-        - 26
-        - 28
-        - 30
-        - 32
-      datasets.freihand.model.encoder.dim_feedforward:
-        lower: 50
-        upper: 300
-        integer: true
+      datasets.freihand.model.encoder.nhead:
+        lower: 1
+        upper: 8
+        integer: True
+      datasets.freihand.model.encoder.num_layers:
+        lower: 1
+        upper: 8
+        integer: True
+      train.hand_dim.late_fusion:
+        - True
+        - False
+      train.hand_dim.embedding_before_encoder:
+        - True
+        - False   
 
 # ****** end of hyper parameter tuning****
 
@@ -59,10 +53,12 @@ train:
   eval_freq: 1
   #parameters for how to incorporate hand dimentions
   hand_dim:
+    #are we using the personal hand dimentions
     use_hand_dim: true
     # are we doing ealy fusion or late fusion
     late_fusion: false
-    #when using hand_dim and early_fusion d_model is independent of pos_embed_dim and joint_embed_dim
+    #use an embedding layer before the encoder. Specify d_model when true
+    embedding_before_encoder: false
     d_model: 100
 
 datasets:
@@ -76,18 +72,18 @@ datasets:
     gt_kpt_train: false
     bs : 8
     num_joints: 21
-    personal_embed_dim: 128
+
     model: 
       pos_mask_size: 224
       encoder:
         nhead : 1
-        dim_feedforward: 100
+        dim_feedforward: 175
         dropout: 0.2
         num_layers: 1
         #this is for a single dimention. *2 for the full positional embedding
         #pos_embedding_dim has to be an even number
-        pos_embed_dim: 22
-        joint_embed_dim: 244
+        pos_embed_dim: 16
+        joint_embed_dim: 300
         #d_model = pose_embed*2 + joint_embed
       
     joint_idx:

@@ -60,26 +60,45 @@ class Model(nn.Module):
         self.pos=self.position_embedding(mask)
         self.joint_embed = nn.Embedding(self.num_joints, dataset_conf.model.encoder.joint_embed_dim)
 
-        d_model=dataset_conf.model.encoder.pos_embed_dim*2+dataset_conf.model.encoder.joint_embed_dim
-        if conf.train.hand_dim.use_hand_dim:
-            if not conf.train.hand_dim.late_fusion:
+        if self.conf.train.hand_dim.use_hand_dim:
+            if self.conf.train.hand_dim.embedding_before_encoder:
                 d_model=conf.train.hand_dim.d_model
-                #personal hand dimention is 20-D (distance to various joints from parent joint. there are 21 joints.)
-                self.early_linear = nn.Linear(self.num_joints-1 +
-                                            dataset_conf.model.encoder.pos_embed_dim*2 +
-                                            dataset_conf.model.encoder.joint_embed_dim ,
-                                            d_model)
+                if self.conf.train.hand_dim.late_fusion:
+                    pre_linear_in_dim=dataset_conf.model.encoder.pos_embed_dim*2 +\
+                                        dataset_conf.model.encoder.joint_embed_dim
+                    self.late_fusion_linear = nn.Linear(d_model+self.num_joints-1,1)
+                else:
+                    pre_linear_in_dim=dataset_conf.model.encoder.pos_embed_dim*2 +\
+                                        dataset_conf.model.encoder.joint_embed_dim +\
+                                        self.num_joints-1
+                    self.estimation_linear = nn.Linear(d_model, 1)
+                self.early_linear = nn.Linear(pre_linear_in_dim,d_model)                       
             else:
-                #late fusion
-                self.late_fusion_linear=nn.Linear(d_model+self.num_joints-1, 1)
-
+                if self.conf.train.hand_dim.late_fusion:
+                    d_model=dataset_conf.model.encoder.pos_embed_dim*2 +\
+                        dataset_conf.model.encoder.joint_embed_dim
+                    self.late_fusion_linear = nn.Linear(d_model+self.num_joints-1,1)
+                else:
+                    d_model=dataset_conf.model.encoder.pos_embed_dim*2 +\
+                            dataset_conf.model.encoder.joint_embed_dim +\
+                            self.num_joints-1  
+                    self.estimation_linear = nn.Linear(d_model, 1)
+        else:
+            #no hand dimentions are used
+            if self.conf.train.hand_dim.embedding_before_encoder:
+                pre_linear_in_dim=dataset_conf.model.encoder.pos_embed_dim*2 +\
+                                        dataset_conf.model.encoder.joint_embed_dim
+                d_model=conf.train.hand_dim.d_model
+                self.early_linear = nn.Linear(pre_linear_in_dim,d_model)
+            else:
+                d_model=dataset_conf.model.encoder.pos_embed_dim*2+dataset_conf.model.encoder.joint_embed_dim
+            self.estimation_linear = nn.Linear(d_model, 1)
         
         encoder_layers = TransformerEncoderLayer(d_model=d_model,
                                                 nhead=dataset_conf.model.encoder.nhead, 
                                                 dim_feedforward=dataset_conf.model.encoder.dim_feedforward, 
                                                 dropout=dataset_conf.model.encoder.dropout)
         self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers=dataset_conf.model.encoder.num_layers)
-        self.linear = nn.Linear(d_model, 1)
 
     def get_pos_embedding(self,inputs):
         if self.conf.datasets[self.conf.dataset].gt_kpt_train:
@@ -112,22 +131,45 @@ class Model(nn.Module):
         joint_embeddings=torch.unsqueeze(joint_embeddings,dim=0)
         joint_embeddings=torch.repeat_interleave(joint_embeddings,repeats=bs,dim=0)
         features=torch.cat([pos_embeddings,joint_embeddings],dim=-1)
+
+
         if self.conf.train.hand_dim.use_hand_dim:
             hand_dims=inputs['hand_dim'].to(torch.float32)
             hand_dims=torch.unsqueeze(hand_dims,dim=1).repeat_interleave(repeats=self.num_joints,dim=1)
             hand_dims=hand_dims.to(self.device)
-            if not self.conf.train.hand_dim.late_fusion:
-                # do early fusion of personal hand embeddings
-                features=torch.cat([features,hand_dims],dim=-1)                
-                features=self.early_linear(features)
-        encoder_out=self.transformer_encoder(features)
-        if self.conf.train.hand_dim.use_hand_dim:
-            if self.conf.train.hand_dim.late_fusion:
-                enc_out_hand=torch.cat((encoder_out,hand_dims),dim=-1)
-                pred=self.late_fusion_linear(enc_out_hand)
-
-        pred=self.linear(encoder_out)
-        pred=pred.squeeze(dim=-1)
+            if self.conf.train.hand_dim.embedding_before_encoder:
+                if self.conf.train.hand_dim.late_fusion:
+                    feat_embeddings=self.early_linear(features)
+                    encoder_out=self.transformer_encoder(feat_embeddings)
+                    late_features=torch.cat((encoder_out,hand_dims),dim=-1)
+                    pred=self.late_fusion_linear(late_features)
+                else:
+                    early_feat=torch.cat((features,hand_dims),dim=-1)
+                    feat_embeddings=self.early_linear(early_feat)
+                    encoder_out=self.transformer_encoder(feat_embeddings)
+                    pred=self.estimation_linear(encoder_out)
+                    
+            else:
+                if self.conf.train.hand_dim.late_fusion:
+                    encoder_out=self.transformer_encoder(features)
+                    late_features=torch.cat((encoder_out,hand_dims),dim=-1)
+                    pred=self.late_fusion_linear(late_features)
+                    
+                else:
+                    early_feat=torch.cat((features,hand_dims),dim=-1)
+                    encoder_out=self.transformer_encoder(early_feat)
+                    pred=self.estimation_linear(encoder_out)
+                   
+        else:
+            #no hand dimentions are used
+            if self.conf.train.hand_dim.embedding_before_encoder:
+                feat_embeddings=self.early_linear(features)
+                encoder_out=self.transformer_encoder(feat_embeddings)
+                pred=self.estimation_linear(encoder_out)                
+            else:
+                encoder_out=self.transformer_encoder(features)
+                pred=self.estimation_linear(encoder_out)
+        pred=torch.squeeze(pred,dim=-1)     
         return pred
 
 
