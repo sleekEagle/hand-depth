@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 import numpy as np
-from config import cfg
+from kypt_transformer.main.config import cfg
 import smplx
 import open3d as o3d
 from kypt_transformer.common.utils.misc import hungarian_match_2djoints, nearest_match_2djoints, batch_rodrigues

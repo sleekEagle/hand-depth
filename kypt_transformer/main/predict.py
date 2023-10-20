@@ -36,10 +36,10 @@ def parse_args():
     parser.add_argument('--annot_subset', type=str, dest='annot_subset', default='all',
                         help='all/human_annot/machine_annot')
     parser.add_argument('--test_set', type=str, dest='test_set', default='test', help='Split type (test/train/val)')
-    parser.add_argument('--ckpt_path', type=str, default='C:\\Users\\lahir\\Downloads\\snapshot_21_845.pth.tar',dest='ckpt_path', help='Full path to the checkpoint file')
-    # parser.add_argument('--ckpt_path', type=str, default='D:\\data\\trained_models\\keypt_transformer\\interhand_2.5D.tar',dest='ckpt_path', help='Full path to the checkpoint file')
+    # parser.add_argument('--ckpt_path', type=str, default='C:\\Users\\lahir\\Downloads\\snapshot_21_845.pth.tar',dest='ckpt_path', help='Full path to the checkpoint file')
+    parser.add_argument('--ckpt_path', type=str, default='D:\\data\\trained_models\\keypt_transformer\\interhand_2.5D.tar',dest='ckpt_path', help='Full path to the checkpoint file')
     parser.add_argument('--use_big_decoder', action='store_true', help='Use Big Decoder for U-Net')
-    parser.add_argument('--dec_layers', type=int, default=6, help='Number of Cross-attention layers')
+    parser.add_argument('--dec_layers', type=int, default=1, help='Number of Cross-attention layers')
     # args = parser.parse_args(['--use_big_decoder'])
     args = parser.parse_args()
     args.capture, args.camera, args.seq_name = None, None, None
@@ -139,8 +139,6 @@ class Predict:
         model_graph = draw_graph(model, input_size=(batch_size, 128), device='meta')
 
 
-        print('here')
-
         # from torchviz import make_dot
         # # writer = SummaryWriter("torchlogs/")
         # if isinstance(self.tester.model, torch.nn.DataParallel):
@@ -166,7 +164,6 @@ def main():
     im2 = Image.open(r"C:\Users\lahir\Downloads\hands\Lhand_up.jpg") 
     im3 = Image.open(r"C:\Users\lahir\Downloads\hands\Rhand_down.jpg") 
     im4 = Image.open(r"C:\Users\lahir\Downloads\hands\Rhand_up.jpg") 
-
 
     im_list=[im1,im2,im3,im4]
     # predict.save_open_model(im_list)
