@@ -15,18 +15,18 @@ hydra:
       # maximize: true  # comment out for maximization
     # default parametrization of the search space
     parametrization:
-      datasets.freihand.bs:
-        lower: 5
-        upper: 30
-        integer: true
-      datasets.freihand.model.encoder.nhead:
-        lower: 1
-        upper: 8
-        integer: True
-      datasets.freihand.model.encoder.num_layers:
-        lower: 1
-        upper: 8
-        integer: True
+      # datasets.freihand.bs:
+      #   lower: 5
+      #   upper: 30
+      #   integer: true
+      # datasets.freihand.model.encoder.nhead:
+      #   lower: 1
+      #   upper: 8
+      #   integer: True
+      # datasets.freihand.model.encoder.num_layers:
+      #   lower: 1
+      #   upper: 8
+      #   integer: True
       train.hand_dim.late_fusion:
         - True
         - False
