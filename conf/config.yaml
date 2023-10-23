@@ -20,9 +20,11 @@ hydra:
       #   upper: 30
       #   integer: true
       datasets.freihand.model.encoder.nhead:
-        lower: 1
-        upper: 8
-        integer: True
+        - 1
+        - 2
+        - 4
+        - 6
+        - 8
       # train.hand_dim.d_model:
       #   lower: 20
       #   upper: 400
