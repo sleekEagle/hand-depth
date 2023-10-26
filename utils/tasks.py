@@ -69,7 +69,15 @@ class Tester():
         for itr,inputs in enumerate(self.data_loader):
             model_out=self.model(inputs)
             gt_depth=inputs['dists'].to(self.device)
-            rmse=torch.sqrt(torch.mean(torch.square(model_out-gt_depth)))
+
+            if self.conf.eval.eval_idx==-1:
+                selected_model_out=model_out
+                selected_gt_depth=gt_depth
+            else:
+                selected_model_out=model_out[self.conf.eval.eval_idx].unsqueeze(dim=0)
+                selected_gt_depth=gt_depth[self.conf.eval.eval_idx].unsqueeze(dim=0)
+
+            rmse=torch.sqrt(torch.mean(torch.square(selected_model_out-selected_gt_depth)))
             errors+=rmse
         rmse_error=errors/len(self.data_loader)
         print(f'RMSE in m :{rmse_error.item()}')

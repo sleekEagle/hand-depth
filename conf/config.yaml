@@ -60,6 +60,9 @@ train:
     #use an embedding layer before the encoder. Specify d_model when true
     embedding_before_encoder: true
     d_model: 144
+eval:
+  #what index to use when evaluating. What joint index do we use when evaluating depth estimation. -1 for mean over all keypoints. 
+  eval_idx: -1
 
 datasets:
   freihand:

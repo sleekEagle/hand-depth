@@ -18,7 +18,7 @@ def train(conf : DictConfig) -> None:
     tester._make_dataloader()
 
     tester.set_model(trainer.model)
-    # rmse_error=tester.evaluate()
+    rmse_error=tester.evaluate()
 
     for epoch in range(conf.train.n_epochs):
         print(f'Starting epoch {epoch}')
