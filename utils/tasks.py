@@ -94,7 +94,7 @@ class Tester():
             rmse=torch.sqrt(torch.mean(torch.square(selected_model_out-selected_gt_depth),dim=0)).unsqueeze(0)
             errors+=rmse
         joint_rmse_error=errors/len(self.data_loader)
-        mean_rmse_error=torch.mean(errors).item()
+        mean_rmse_error=torch.mean(errors).item()/len(self.data_loader)
 
         #indexify the joint dict
         joints=self.conf.datasets.freihand.joint_idx
