@@ -3,6 +3,20 @@ import data.FreiHAND.dataset as dataset
 from torch.utils.data import DataLoader
 from models import model
 import torch.nn as nn
+from omegaconf import DictConfig
+
+def indexify_joints(joints):
+    idx_joints={}
+    n=0
+    for i,key_1 in enumerate(list(joints.keys())):
+        if type(joints[key_1])==DictConfig:
+            for j,sub_key in enumerate(list(joints[key_1].keys())):
+                idx_joints[n]=f'{key_1}-{sub_key}'
+                n+=1
+        elif type(joints[key_1])==int:
+            idx_joints[n]=key_1
+            n+=1
+    return idx_joints
 
 class Trainer():
     def __init__(self,conf):
@@ -65,7 +79,7 @@ class Tester():
         self.model=model
     
     def evaluate(self):
-        errors=torch.tensor(0.0).to(self.device)
+        errors=torch.zeros((1,self.conf.datasets.freihand.num_joints)).to(self.device)
         for itr,inputs in enumerate(self.data_loader):
             model_out=self.model(inputs)
             gt_depth=inputs['dists'].to(self.device)
@@ -77,11 +91,23 @@ class Tester():
                 selected_model_out=model_out[self.conf.eval.eval_idx].unsqueeze(dim=0)
                 selected_gt_depth=gt_depth[self.conf.eval.eval_idx].unsqueeze(dim=0)
 
-            rmse=torch.sqrt(torch.mean(torch.square(selected_model_out-selected_gt_depth)))
+            rmse=torch.sqrt(torch.mean(torch.square(selected_model_out-selected_gt_depth),dim=0)).unsqueeze(0)
             errors+=rmse
-        rmse_error=errors/len(self.data_loader)
-        print(f'RMSE in m :{rmse_error.item()}')
-        return rmse_error.item()
+        joint_rmse_error=errors/len(self.data_loader)
+        mean_rmse_error=torch.mean(errors).item()
+
+        #indexify the joint dict
+        joints=self.conf.datasets.freihand.joint_idx
+        idx_joints=indexify_joints(joints)
+
+        #print the joint-wise errors
+        print('Joint-wise RMSE in meters:')
+        for i in range(joint_rmse_error.shape[1]):
+            print(f"{idx_joints[i]}: %.3f" % joint_rmse_error[0,i].item())
+
+        print(f'mean RMSE in meters :{mean_rmse_error}')
+
+        return mean_rmse_error,joint_rmse_error
 
 
 

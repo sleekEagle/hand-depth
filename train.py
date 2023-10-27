@@ -18,19 +18,16 @@ def train(conf : DictConfig) -> None:
     tester._make_dataloader()
 
     tester.set_model(trainer.model)
-    rmse_error=tester.evaluate()
+    # mean_rmse_error,perjoint_rmse_error=tester.evaluate()
 
     for epoch in range(conf.train.n_epochs):
         print(f'Starting epoch {epoch}')
         trainer.train_epoch()        
         if (epoch+1)%conf.train.eval_freq==0:
             tester.set_model(trainer.model)
-            rmse_error=tester.evaluate()
-            print(f"evaluation RMSE = {rmse_error}")
-            
-    # rmse_error=random.randint(1,300) 
-    # print(f"evaluation RMSE = {rmse_error}")
-    return rmse_error
+            mean_rmse_error,perjoint_rmse_error=tester.evaluate()
+
+    return mean_rmse_error
         
 if __name__ == "__main__":
     train()
