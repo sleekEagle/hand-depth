@@ -76,6 +76,7 @@ datasets:
       hrnet_annot: false
       #add small random values to the xyz positions of coordinates. if true, hrnet_annot must be false
       xyz_aug: true
+      #means and std of noise added to x,y,z of keypoint positions
       xyz_aug_means: [0,0,0]
       xyz_aug_std: [0.01,0.01,1.0]
 
