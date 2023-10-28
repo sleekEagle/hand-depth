@@ -18,7 +18,7 @@ def train(conf : DictConfig) -> None:
     tester._make_dataloader()
 
     tester.set_model(trainer.model)
-    # mean_rmse_error,perjoint_rmse_error=tester.evaluate()
+    mean_rmse_error,perjoint_rmse_error=tester.evaluate()
 
     for epoch in range(conf.train.n_epochs):
         print(f'Starting epoch {epoch}')

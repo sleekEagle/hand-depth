@@ -102,8 +102,9 @@ class FreiHAND(Dataset):
         # load annotations
         self.mode=mode
         self.base_path=os.path.join(conf.datasets.freihand.base_path,f"FreiHAND_pub_v2_{self.mode}")
-        if conf.datasets.freihand.hrnet_annot:
-            self.db_data_anno,self.hrnet_annot = load_db_annotation(self.base_path,mode,self.conf.datasets.freihand.hrnet_annot)
+        self.use_hrnet_annot=self.conf.datasets.freihand[self.mode].hrnet_annot
+        if self.use_hrnet_annot:
+            self.db_data_anno,self.hrnet_annot = load_db_annotation(self.base_path,mode,self.use_hrnet_annot)
             self.db_data_anno=list(self.db_data_anno)
         else:
             self.db_data_anno = list(load_db_annotation(self.base_path,self.mode))
@@ -160,6 +161,17 @@ class FreiHAND(Dataset):
         # annotation for this frame
         K, mano, xyz = self.db_data_anno[coco_idx]
         K, mano, xyz = [np.array(x) for x in [K, mano, xyz]]
+
+        #add small random values to xyz values
+        if self.conf.datasets.freihand[self.mode].xyz_aug:
+            n_joints=xyz.shape[0]
+            aug_mean=np.repeat(np.expand_dims(np.array(self.conf.datasets.freihand[self.mode].xyz_aug_means),axis=0),
+                            repeats=n_joints,axis=0)
+            aug_std=np.repeat(np.expand_dims(np.array(self.conf.datasets.freihand[self.mode].xyz_aug_std),axis=0),
+                            repeats=n_joints,axis=0)
+            noise=np.random.normal(loc=aug_mean,scale=aug_std)
+            xyz=xyz+noise
+        
         uv = projectPoints(xyz, K)
         values={}
         if self.conf.datasets.freihand.get_image:
@@ -181,7 +193,7 @@ class FreiHAND(Dataset):
         xyz_=np.expand_dims(xyz_,-1)
         values['hand_dim']=utils.get_hand_dims(xyz_,self.conf)[:,0]
         #get 2D keypoint annotations generated with unet
-        if self.conf.datasets.freihand.hrnet_annot:
+        if self.use_hrnet_annot:
             annot=self.get_hrnet_annot(idx)
             values['unet_annot']=np.array(annot['keypoints'])
         return values

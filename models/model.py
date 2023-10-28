@@ -101,10 +101,13 @@ class Model(nn.Module):
         self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers=dataset_conf.model.encoder.num_layers)
 
     def get_pos_embedding(self,inputs):
-        if self.conf.datasets[self.conf.dataset].gt_kpt_train:
-            kypts=inputs['uv']
-        else:
+        mode='training' if self.train else 'evalution'
+        if self.conf.datasets[self.conf.dataset][mode].hrnet_annot:
             kypts=inputs['unet_annot']
+        else:
+            #use GT xy coordinates
+            kypts=inputs['uv']
+            
 
         #get root-relative 2D focal-distance normalized coordinates
         roots=torch.repeat_interleave(torch.unsqueeze(kypts[:,0,:],dim=1),repeats=kypts.shape[1],dim=1)

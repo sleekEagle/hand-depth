@@ -70,11 +70,18 @@ datasets:
     version: gs
     get_mask: False
     get_image: True
-    hrnet_annot: True
-    #do we train on GT keypoints? false: train on hrnet keypoints
-    gt_kpt_train: false
     bs : 8
     num_joints: 21
+    training:
+      hrnet_annot: false
+      #add small random values to the xyz positions of coordinates. if true, hrnet_annot must be false
+      xyz_aug: true
+      xyz_aug_means: [0,0,0]
+      xyz_aug_std: [0.01,0.01,1.0]
+
+    evaluation:
+      hrnet_annot: false
+      xyz_aug: false
 
     model: 
       pos_mask_size: 224
