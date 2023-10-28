@@ -93,17 +93,19 @@ class Tester():
 
             rmse=torch.sqrt(torch.mean(torch.square(selected_model_out-selected_gt_depth),dim=0)).unsqueeze(0)
             errors+=rmse
-        joint_rmse_error=errors/len(self.data_loader)
+
         mean_rmse_error=torch.mean(errors).item()/len(self.data_loader)
-
-        #indexify the joint dict
-        joints=self.conf.datasets.freihand.joint_idx
-        idx_joints=indexify_joints(joints)
-
+        
         #print the joint-wise errors
-        print('Joint-wise RMSE in meters:')
-        for i in range(joint_rmse_error.shape[1]):
-            print(f"{idx_joints[i]}: %.3f" % joint_rmse_error[0,i].item())
+        if self.conf.eval.eval_idx==-1:
+            joint_rmse_error=errors/len(self.data_loader)
+            #indexify the joint dict
+            joints=self.conf.datasets.freihand.joint_idx
+            idx_joints=indexify_joints(joints)
+
+            print('Joint-wise RMSE in meters:')
+            for i in range(joint_rmse_error.shape[1]):
+                print(f"{idx_joints[i]}: %.3f" % joint_rmse_error[0,i].item())
 
         print(f'mean RMSE in meters :{mean_rmse_error}')
 
