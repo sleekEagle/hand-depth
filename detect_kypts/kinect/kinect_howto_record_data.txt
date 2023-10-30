@@ -1,0 +1,16 @@
+goto the kinect directory of open3d
+cd /c/Users/lahir/code/Open3D/examples/python/reconstruction_system/sensors
+
+record data:
+1. place the azure_kinect_mkv_recorder_my.py in open3d directory (/c/Users/lahir/code/Open3D/examples/python/reconstruction_system/sensors)
+   We modified this file so it will include the timestamp when recording is started ( when the space is pressed)
+2. edit the config file according to your needs
+3. python azure_kinect_recorder_my.py --output C:\Users\lahir\data\kinect_hand_data\CPR_data\kinect\ --config C:\Users\lahir\code\hand-depth\detect_kypts\config.json
+4. press space to record and ESC to quit and save
+
+view feed:
+python azure_kinect_viewer.py --config C:\Users\lahir\code\handblur\config.json --align_depth_to_color
+
+extract images from the recorded mkv video
+python azure_kinect_mkv_reader.py --input C:\Users\lahir\data\kinect_hand_data\CPR_data\kinect\record_1698517861.9819145.mkv --output C:\Users\lahir\data\kinect_hand_data\CPR_data\kinect\frames
+

@@ -50,6 +50,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Detect hand keypoints')
     parser.add_argument('--data_dir', type=str, help='directory containing data',
                         default='C:\\Users\\lahir\\data\\kinect_hand_data\\CPR_data\\kinect\\session1\\')
+    parser.add_argument('--ext_time', type=str, help='Extract timestamp from visible digital clock. Black background.',
+                        default=True)
+    parser.add_argument('--clock_coord', type=str, help='Pixel coordinates for clock location (upper left x,y, lower right x,y)',
+                        default=[372,198,526,298])
     args = parser.parse_args()
     main(args.data_dir)  
 
