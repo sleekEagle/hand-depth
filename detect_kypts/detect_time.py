@@ -15,7 +15,7 @@ def show_img(image):
 '''
 img: opencv greyscale image 
 clock_coord: pixle coordinates of the clock location
-to use: 
+use this as follows: 
 
 impth=r'C:\Users\lahir\data\kinect_hand_data\CPR_data\kinect\frames\color\00037.jpg'
 clock_coord=[226,192,412,246]
