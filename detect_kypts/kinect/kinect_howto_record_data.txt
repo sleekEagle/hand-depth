@@ -14,3 +14,18 @@ python azure_kinect_viewer.py --config C:\Users\lahir\code\handblur\config.json 
 extract images from the recorded mkv video
 python azure_kinect_mkv_reader.py --input C:\Users\lahir\data\kinect_hand_data\CPR_data\kinect\record_1698517861.9819145.mkv --output C:\Users\lahir\data\kinect_hand_data\CPR_data\kinect\frames
 
+
+****how to display large system time on windows so we can sync*****
+in windows terminal (Power shell)
+
+while ($true) {
+    $currentTime = Get-Date -Format "HH:mm:ss.fff"
+    Write-Host -NoNewline $currentTime
+    Start-Sleep -Milliseconds 1
+    [System.Console]::SetCursorPosition(0, [System.Console]::CursorTop)
+}
+
+Change the font size of the terminal to as large as possible (128)
+
+
+

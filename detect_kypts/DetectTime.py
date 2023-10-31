@@ -4,6 +4,9 @@ import pytesseract
 from PIL import Image
 import re
 
+from google.cloud import vision
+client = vision.ImageAnnotatorClient()
+
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 def show_img(image):
@@ -35,6 +38,51 @@ def get_ts_from_image(img,clock_coord):
     assert len(numbers)==3, "time detection failed"
     ts='.'.join(numbers)
     return ts
+
+# clock_coord=[1107,132,1821,209]
+# get_ts_from_image(img,clock_coord)
+
+def extract_time_str(txt):
+    x = re.findall("[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]", txt)
+    if len(x)>0:
+        return x[0]
+    else: 
+         return None
+
+#extract text from image using Google Viaion API
+'''
+to use:
+
+img=r'C:\Users\lahir\Downloads\time.jpg'
+get_ts_google(img)
+'''
+def get_ts_google(image_path):
+    with open(image_path, "rb") as image_file:
+            content = image_file.read()
+    image = vision.Image(content=content)
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+
+    for text in texts:
+        match=extract_time_str(text.description)
+        if type(match)==str:
+            break
+    return match
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

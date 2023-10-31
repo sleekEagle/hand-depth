@@ -20,11 +20,12 @@ We modified this so the record filename includes the timestamp when the recordin
 
 class RecorderWithCallback:
 
-    def __init__(self, config, device, filename, align_depth_to_color):
+    def __init__(self, config, device, filename, align_depth_to_color,n):
         # Global flags
         self.flag_exit = False
         self.flag_record = False
         self.filename = filename
+        self.n=n
 
         self.align_depth_to_color = align_depth_to_color
         self.recorder = o3d.io.AzureKinectRecorder(config, device)
@@ -77,11 +78,19 @@ class RecorderWithCallback:
               "Press [ESC] to save and exit.")
 
         vis_geometry_added = False
+        num_imgs=0
+        
         while not self.flag_exit:
             rgbd = self.recorder.record_frame(self.flag_record,
                                               self.align_depth_to_color)
             if rgbd is None:
                 continue
+
+            if self.flag_record:
+                if not self.n == -1:
+                    num_imgs+=1
+                    if num_imgs==self.n:
+                        break
 
             if not vis_geometry_added:
                 vis.add_geometry(rgbd)
@@ -105,6 +114,10 @@ if __name__ == '__main__':
                         type=int,
                         default=0,
                         help='input kinect device id')
+    parser.add_argument('--n',
+                        type=int,
+                        default=-1,
+                        help='number of images to take. -1 to ercord until ESC is pressed')
     parser.add_argument('-a',
                         '--align_depth_to_color',
                         action='store_true',
@@ -133,5 +146,5 @@ if __name__ == '__main__':
         device = 0
 
     r = RecorderWithCallback(config, device, filename,
-                             args.align_depth_to_color)
+                             args.align_depth_to_color,args.n)
     r.run()
