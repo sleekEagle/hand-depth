@@ -10,7 +10,7 @@
 import argparse
 import datetime
 import open3d as o3d
-import time
+from datetime import datetime
 from os.path import join
 
 '''
@@ -48,7 +48,10 @@ class RecorderWithCallback:
             self.flag_record = False
 
         elif not self.recorder.is_record_created():
-            self.start_time=time.time()
+            t=datetime.now()
+            now_str = t.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+            now_str=now_str.split(' ')[-1]
+            self.start_time=now_str.replace(':','_')  #to be savable as a valid file
             timename=f'record_{self.start_time}.mkv'
             self.filename=join(self.filename,timename)
             print(self.filename)

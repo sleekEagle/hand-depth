@@ -1,13 +1,11 @@
 import cv2
-import numpy as np
-import pytesseract
-from PIL import Image
+# import pytesseract
 import re
 
 from google.cloud import vision
 client = vision.ImageAnnotatorClient()
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 def show_img(image):
     image=cv2.resize(image,(500,500),interpolation = cv2.INTER_AREA)
@@ -16,6 +14,7 @@ def show_img(image):
     cv2.destroyAllWindows()
 
 '''
+use pytesseract 
 img: opencv greyscale image 
 clock_coord: pixle coordinates of the clock location
 use this as follows: 
@@ -52,8 +51,7 @@ def extract_time_str(txt):
 #extract text from image using Google Viaion API
 '''
 to use:
-
-img=r'C:\Users\lahir\Downloads\time.jpg'
+img=r'C:\\Users\\lahir\\Downloads\\time.jpg'
 get_ts_google(img)
 '''
 def get_ts_google(image_path):
@@ -68,6 +66,8 @@ def get_ts_google(image_path):
         if type(match)==str:
             break
     return match
+
+get_ts_google(r'C:\Users\lahir\Downloads\Photos-001\20000101000129_IMG_0256.JPG')
 
 
 
