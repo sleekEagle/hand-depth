@@ -67,7 +67,7 @@ def get_ts_google(image_path):
             break
     return match
 
-get_ts_google(r'C:\Users\lahir\Downloads\Photos-001\20000101000129_IMG_0256.JPG')
+# get_ts_google(r'C:\Users\lahir\Downloads\Photos-001\20000101000129_IMG_0256.JPG')
 
 
 
