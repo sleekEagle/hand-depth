@@ -24,7 +24,7 @@ def main(data_dir,fps=5,detect_time=False,clock_coord=[]):
         start_time = datetime.datetime.strptime(timestr, format_str)
 
     #if bbox_score > bb_thresh no hands are detected
-    bb_thresh=0.6
+    bb_thresh=0.8
     Kypt=PredictKypt()
     data={}
     rgb_files=[file for file in os.listdir(rgb_dir) if file.split('.')[-1]=='jpg']
@@ -47,17 +47,18 @@ def main(data_dir,fps=5,detect_time=False,clock_coord=[]):
             hand_kypts=result['keypoints']
             #get depth for each keypoint location
             k_depths=[]
+
             for kypt in hand_kypts:
                 kx,ky=kypt
                 #get depth average of 3 pixel radius around the keypoint location
-                r=3
-                d_sel=depth[int(kx-r):int(kx+r),int(ky-r):int(ky+r)]
+                r=10
+                d_sel=depth[int(ky-r):int(ky+r),int(kx-r):int(kx+r)]
                 #remove unvalid depth values
-                d_del=d_sel[d_sel>0]
-                if d_del.shape[0]==0:
+                d_sel=d_sel[d_sel>0]
+                if d_sel.shape[0]==0:
                     k_depth=0
                 else:
-                    k_depth=np.mean(d_del)
+                    k_depth=np.mean(d_sel)
                 k_depths.append(k_depth)
 
 
@@ -85,7 +86,7 @@ def main(data_dir,fps=5,detect_time=False,clock_coord=[]):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Detect hand keypoints')
     parser.add_argument('--data_dir', type=str, help='directory containing data',
-                        default='C:\\Users\\lahir\\data\\kinect_hand_data\\testdata1\\')
+                        default='C:\\Users\\lahir\\data\\kinect_hand_data\\testdata2\\')
     parser.add_argument('--ext_time', type=str, help='Extract timestamp from visible digital clock. Black background.',
                         default=False)
     parser.add_argument('--clock_coord', type=str, help='Pixel coordinates for clock location (upper left x,y, lower right x,y)',
