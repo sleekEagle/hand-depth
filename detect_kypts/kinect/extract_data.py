@@ -12,6 +12,11 @@ import numpy as np
 import datetime
 import utils
 
+def get_ts(ts_str):
+    splt=ts_str.split('_')
+    ts=float(splt[0])*60*60 + float(splt[1])*60 + float(splt[2])*1
+    return ts
+
 # fps: camera FPS used
 def main(data_dir,fps=5):
     rgb_dir=os.path.join(data_dir,'kinect','color')
@@ -19,10 +24,12 @@ def main(data_dir,fps=5):
 
     #extract start timestamp
     rec_name=[file for file in os.listdir(data_dir) if file[-3:]=='mkv']
-    if len(rec_name)>0:
-        timestr=rec_name[0][7:-4]
-        vals=timestr.split('_')
-        start_time=float(vals[0])*60*60 + float(vals[1])*60+ float(vals[2])*1
+    tsfile_name=os.path.join(data_dir,rec_name[0].replace('mkv','txt'))
+
+    with open(tsfile_name, 'r') as file:
+        lines = file.readlines()
+    ts_list=[line.replace('\n','') for line in lines]
+    ts_s_list=np.array([get_ts(ts_str) for ts_str in ts_list])
 
     #if bbox_score > bb_thresh no hands are detected
     bb_thresh=0.8
@@ -31,15 +38,11 @@ def main(data_dir,fps=5):
     rgb_files=[file for file in os.listdir(rgb_dir) if file.split('.')[-1]=='jpg']
     n=0
     k_depths_ar=np.empty((0,21))
-    ts_ar=[]
-    for file in rgb_files:
+    for i,file in enumerate(rgb_files):
         full_path=os.path.join(rgb_dir,file)
         result=Kypt.get_kypts(full_path)
         bb_score=result['bbox_score']
         img_num=int(file.split('.')[0])
-        delta=1/fps*img_num
-        img_ts=start_time+delta
-        ts_ar.append(img_ts)
 
         #read depth image
         d_file=file.split('.')[0]+'.png'
@@ -73,7 +76,7 @@ def main(data_dir,fps=5):
                     'keypoint_scores': result['keypoint_scores'],
                     'bbox_score': result['bbox_score'],
                     'keypoint_depths': k_depths,
-                    'ts': img_ts}
+                    'ts': ts_s_list[i]}
             k_depths_ar=np.concatenate((k_depths_ar,np.array([k_depths])),axis=0)
             # if detect_time:
             #     #extract timestamp from digital clock with computer vision
@@ -84,13 +87,14 @@ def main(data_dir,fps=5):
             n+=1
 
     #interpolate missing depth values : cubic spline interpolation
-    interp_funcs=utils.fit_cubicsplines(np.array(ts_ar),k_depths_ar)
+
+    interp_funcs=utils.fit_cubicsplines(ts_s_list,k_depths_ar)
     #interpolate missing values of the k_depths
     filled_depths=np.empty((k_depths_ar.shape[0],0))
     for i in range(k_depths_ar.shape[-1]):
         vals=k_depths_ar[:,i]
         args=np.argwhere(vals==0)[:,0]
-        pred_vals=interp_funcs[i](np.array(ts_ar))
+        pred_vals=interp_funcs[i](ts_s_list)
         filled_vals=vals.copy()
         filled_vals[args]=pred_vals[args]
         filled_depths=np.concatenate((filled_depths,np.expand_dims(filled_vals,axis=1)),axis=-1)
@@ -107,7 +111,7 @@ def main(data_dir,fps=5):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Detect hand keypoints')
     parser.add_argument('--data_dir', type=str, help='directory containing data',
-                        default='C:\\Users\\lahir\\data\\kinect_hand_data\\testdata1\\')
+                        default='C:\\Users\\lahir\\data\\kinect_hand_data\\testdata2\\')
     args = parser.parse_args()
     main(args.data_dir)  
     
