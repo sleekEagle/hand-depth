@@ -20,17 +20,25 @@ We modified this so the record filename includes the timestamp when the recordin
 
 class RecorderWithCallback:
 
-    def __init__(self, config, device, filename, align_depth_to_color,n):
+    def __init__(self, config, device, record_filename, txt_filename, align_depth_to_color,n):
         # Global flags
         self.flag_exit = False
         self.flag_record = False
-        self.filename = filename
+        self.filename = record_filename
+        self.ts_filename=txt_filename
         self.n=n
 
         self.align_depth_to_color = align_depth_to_color
         self.recorder = o3d.io.AzureKinectRecorder(config, device)
         if not self.recorder.init_sensor():
             raise RuntimeError('Failed to connect to sensor')
+        
+    def get_ts(self):
+        t=datetime.now()
+        now_str = t.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+        now_str=now_str.split(' ')[-1]
+        return now_str.replace(':','_') 
+
 
     def escape_callback(self, vis):
         self.flag_exit = True
@@ -47,14 +55,8 @@ class RecorderWithCallback:
                   'Press [ESC] to save and exit.')
             self.flag_record = False
 
-        elif not self.recorder.is_record_created():
-            t=datetime.now()
-            now_str = t.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-            now_str=now_str.split(' ')[-1]
-            self.start_time=now_str.replace(':','_')  #to be savable as a valid file
-            timename=f'record_{self.start_time}.mkv'
-            self.filename=join(self.filename,timename)
-            print(self.filename)
+        elif not self.recorder.is_record_created():   
+                     
             if self.recorder.open_record(self.filename):
                 print('Recording started. '
                       'Press [SPACE] to pause. '
@@ -84,6 +86,10 @@ class RecorderWithCallback:
         num_imgs=0
         
         while not self.flag_exit:
+            #write ts to the ts file
+            ts=self.get_ts()
+            with open(self.ts_filename, 'a') as f:
+                f.write(ts+'\n')
             rgbd = self.recorder.record_frame(self.flag_record,
                                               self.align_depth_to_color)
             if rgbd is None:
@@ -109,7 +115,7 @@ class RecorderWithCallback:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Azure kinect mkv recorder.')
     parser.add_argument('--config', type=str, help='input json kinect config')
-    parser.add_argument('--output', type=str, help='output mkv filename')
+    parser.add_argument('--output', type=str, help='output directory')
     parser.add_argument('--list',
                         action='store_true',
                         help='list available azure kinect sensors')
@@ -132,22 +138,27 @@ if __name__ == '__main__':
         exit()
 
     if args.config is not None:
+        print(f'config path: {args.config}')
         config = o3d.io.read_azure_kinect_sensor_config(args.config)
     else:
         config = o3d.io.AzureKinectSensorConfig()
 
-    if args.output is not None:
-        filename = args.output
-    else:
-        filename = '{date:%Y-%m-%d-%H-%M-%S}.mkv'.format(
-            date=datetime.datetime.now())
-    print('Prepare writing to {}'.format(filename))
+    assert args.output is not None , "output must be given"
+    ts='{date:%Y-%m-%d-%H-%M-%S}.mkv'.format(
+        date=datetime.now())
+    record_filename = join(args.output,ts)
+    print('Prepare writing to {}'.format(record_filename))
+
+    #generate text file to write the timestamps
+    ts_txt=ts.replace('.mkv','.txt')
+    txt_filename = join(args.output,ts_txt)
+    print('Creating ts file {}'.format(txt_filename))
 
     device = args.device
     if device < 0 or device > 255:
         print('Unsupported device id, fall back to 0')
         device = 0
 
-    r = RecorderWithCallback(config, device, filename,
+    r = RecorderWithCallback(config, device, record_filename, txt_filename,
                              args.align_depth_to_color,args.n)
     r.run()

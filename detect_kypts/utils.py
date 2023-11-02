@@ -1,9 +1,13 @@
 import cv2
 # import pytesseract
 import re
-
+from scipy.interpolate import CubicSpline
+import numpy as np
+from datetime import datetime
+import os
 from google.cloud import vision
 client = vision.ImageAnnotatorClient()
+
 
 # pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
@@ -68,6 +72,34 @@ def get_ts_google(image_path):
     return match
 
 # get_ts_google(r'C:\Users\lahir\Downloads\Photos-001\20000101000129_IMG_0256.JPG')
+
+def fit_cubicsplines(x,val_ar):
+    func_list=[]
+    for i in range(val_ar.shape[-1]):
+        vals=val_ar[:,i]
+        args=np.argwhere(vals>0)
+        x_=x[args][:,0]
+        vals_=vals[args][:,0]
+        spl=CubicSpline(x_,vals_)
+        func_list.append(spl)
+    return func_list
+
+#convert datetime timestamp to milliseconds
+def get_ms(ts):
+    t = datetime.strptime(ts, "%H:%M:%S.%f")
+    return t.hour*1000*60*60 + t.minute*1000*60 + t.second*1000 + t.microsecond/1000
+
+#extract files with one of the given set of extentions 
+def get_files_ext(dir_pth,possible_ext=['jpg','png']):
+    files=[file for file in os.listdir(dir_pth) if file.split('.')[-1].lower() in possible_ext]
+    return files
+
+def show_cvimg(img):
+    cv2.imshow('Image',img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows() # It destroys the image showing the window.
+
+
 
 
 

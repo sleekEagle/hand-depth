@@ -10,9 +10,10 @@ import argparse
 import cv2
 import numpy as np
 import datetime
+import utils
 
 # fps: camera FPS used
-def main(data_dir,fps=5,detect_time=False,clock_coord=[]):
+def main(data_dir,fps=5):
     rgb_dir=os.path.join(data_dir,'kinect','color')
     depth_dir=os.path.join(data_dir,'kinect','depth')
 
@@ -20,8 +21,8 @@ def main(data_dir,fps=5,detect_time=False,clock_coord=[]):
     rec_name=[file for file in os.listdir(data_dir) if file[-3:]=='mkv']
     if len(rec_name)>0:
         timestr=rec_name[0][7:-4]
-        format_str = "%H_%M_%S.%f"
-        start_time = datetime.datetime.strptime(timestr, format_str)
+        vals=timestr.split('_')
+        start_time=float(vals[0])*60*60 + float(vals[1])*60+ float(vals[2])*1
 
     #if bbox_score > bb_thresh no hands are detected
     bb_thresh=0.8
@@ -29,13 +30,16 @@ def main(data_dir,fps=5,detect_time=False,clock_coord=[]):
     data={}
     rgb_files=[file for file in os.listdir(rgb_dir) if file.split('.')[-1]=='jpg']
     n=0
+    k_depths_ar=np.empty((0,21))
+    ts_ar=[]
     for file in rgb_files:
         full_path=os.path.join(rgb_dir,file)
         result=Kypt.get_kypts(full_path)
         bb_score=result['bbox_score']
         img_num=int(file.split('.')[0])
-        delta=datetime.timedelta(seconds=1/fps*img_num)
-        img_ts=(start_time+delta).time().strftime('%H:%M:%S.%f')
+        delta=1/fps*img_num
+        img_ts=start_time+delta
+        ts_ar.append(img_ts)
 
         #read depth image
         d_file=file.split('.')[0]+'.png'
@@ -70,6 +74,7 @@ def main(data_dir,fps=5,detect_time=False,clock_coord=[]):
                     'bbox_score': result['bbox_score'],
                     'keypoint_depths': k_depths,
                     'ts': img_ts}
+            k_depths_ar=np.concatenate((k_depths_ar,np.array([k_depths])),axis=0)
             # if detect_time:
             #     #extract timestamp from digital clock with computer vision
             #     ts=DetectTime.get_ts_from_image(full_path,clock_coord)
@@ -77,6 +82,22 @@ def main(data_dir,fps=5,detect_time=False,clock_coord=[]):
 
             data[n]=this_data
             n+=1
+
+    #interpolate missing depth values : cubic spline interpolation
+    interp_funcs=utils.fit_cubicsplines(np.array(ts_ar),k_depths_ar)
+    #interpolate missing values of the k_depths
+    filled_depths=np.empty((k_depths_ar.shape[0],0))
+    for i in range(k_depths_ar.shape[-1]):
+        vals=k_depths_ar[:,i]
+        args=np.argwhere(vals==0)[:,0]
+        pred_vals=interp_funcs[i](np.array(ts_ar))
+        filled_vals=vals.copy()
+        filled_vals[args]=pred_vals[args]
+        filled_depths=np.concatenate((filled_depths,np.expand_dims(filled_vals,axis=1)),axis=-1)
+    
+    #add the interpolated values to the data dictionary
+    for i,key in enumerate(data.keys()):
+        data[key]['keypoint_depths_interp']=list(filled_depths[i,:])
 
     json_file=os.path.join(data_dir,'data.json')
     with open(json_file, "w") as outfile: 
@@ -86,15 +107,9 @@ def main(data_dir,fps=5,detect_time=False,clock_coord=[]):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Detect hand keypoints')
     parser.add_argument('--data_dir', type=str, help='directory containing data',
-                        default='C:\\Users\\lahir\\data\\kinect_hand_data\\testdata2\\')
-    parser.add_argument('--ext_time', type=str, help='Extract timestamp from visible digital clock. Black background.',
-                        default=False)
-    parser.add_argument('--clock_coord', type=str, help='Pixel coordinates for clock location (upper left x,y, lower right x,y)',
-                        default=[225,198,413,247])
+                        default='C:\\Users\\lahir\\data\\kinect_hand_data\\testdata1\\')
     args = parser.parse_args()
-    main(args.data_dir,
-         detect_time=args.ext_time,
-         clock_coord=args.clock_coord)  
+    main(args.data_dir)  
     
 
 # import json
