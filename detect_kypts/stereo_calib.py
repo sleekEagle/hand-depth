@@ -1,10 +1,13 @@
 import cv2
 import numpy as np
 import os
-import detect_kypts.single_calib as singlecalib
+import single_calib as singlecalib
+import utils
 
-cam1_dir='C:\\Users\\lahir\\data\\kinect_hand_data\\calibration\\kinect\\'
-cam2_dir='C:\\Users\\lahir\\data\\kinect_hand_data\\calibration\\canon\\'
+#kinect images
+cam1_dir='C:\\Users\\lahir\\data\\kinect_hand_data\\testdata4\\calib\\kinect\\imgs\\'
+#canon images
+cam2_dir='C:\\Users\\lahir\\data\\kinect_hand_data\\testdata4\\calib\\canon\\'
 
 #read calibration matrices
 def get_matrices(cam_dir):
@@ -12,8 +15,8 @@ def get_matrices(cam_dir):
     dist=np.load(os.path.join(cam_dir,'dist.npy'))
     return k,dist
 
-cam1_k,cam1_dist=get_matrices(cam1_dir)
-cam2_k,cam2_dist=get_matrices(cam2_dir)
+cam1_k,cam1_dist=utils.get_calib_matrices(cam1_dir)
+cam2_k,cam2_dist=utils.get_calib_matrices(cam2_dir)
 
 cam1_files=[file for file in os.listdir(cam1_dir) if file.split('.')[-1].lower()=='jpg']
 cam1_files.sort()
@@ -45,9 +48,12 @@ ret, CM1, dist1, CM2, dist2, R, T, E, F = cv2.stereoCalibrate(objpoints, imgpoin
                                                               cam2_k, cam2_dist, (1,1),
                                                               criteria = criteria, flags = stereocalibration_flags)
 
-out_path='C:\\Users\\lahir\\data\\kinect_hand_data\\calibration\\'
+out_path='C:\\Users\\lahir\\data\\kinect_hand_data\\testdata4\\calib\\'
 np.save(os.path.join(out_path,'R.npy'),R)
 np.save(os.path.join(out_path,'T.npy'),T)
+
+
+
 
 
 

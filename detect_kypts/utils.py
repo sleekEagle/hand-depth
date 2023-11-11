@@ -99,6 +99,51 @@ def show_cvimg(img):
     cv2.waitKey(0)
     cv2.destroyAllWindows() # It destroys the image showing the window.
 
+#read calibration matrices
+def get_calib_matrices_npy(cam_dir):
+    k=np.load(os.path.join(cam_dir,'k.npy'))
+    dist=np.load(os.path.join(cam_dir,'dist.npy'))
+    return k,dist
+
+#get stereo calibration matrices
+def get_stereo_calib_matrices_npy(stereo_calib_path):
+    R=np.load(os.path.join(stereo_calib_path,'R.npy'))
+    T=np.load(os.path.join(stereo_calib_path,'T.npy'))
+    return R,T
+
+'''
+get matrix from text file
+a,b,c
+d,f,g
+v,b,n
+'''
+def get_matr(path):
+    with open(path, 'r') as file:
+        lines = file.readlines()
+    matr=[]
+    for line in lines:
+        line_spl=line.split(',')
+        vals=[]
+        for l in line_spl:
+            vals.append(float(l.replace('\n','')))
+        matr.append(vals)
+    return np.array(matr)
+
+
+'''
+get the 3D coordinates (XYZ) given 
+camera projection matrix, pixel (x,y) coordinates and 
+depth (XYZ units are in the same units as d)
+'''
+def calc_XYZ(k,x,y,d):
+    cx,cy=k[0,2],k[1,2]
+    fx,fy=k[0,0],k[1,1]
+    Z=d/(((x-cx)/fx)**2+((y-cy)/fy)**2+1)**0.5
+    X=(x-cx)/fx*Z
+    Y=(y-cy)/fy*Z
+    return X,Y,Z
+
+
 
 
 
