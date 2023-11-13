@@ -1,6 +1,15 @@
 #include <Wire.h>
 #include "Adafruit_VL6180X.h"
 
+//connecting the pins to VL6180 sensor : 
+//https://learn.adafruit.com/adafruit-vl6180x-time-of-flight-micro-lidar-distance-sensor-breakout/wiring-and-test
+/*
+VL 6120 pin |  Arduino pin
+vin            3-5 v power supply
+GND            common/GND
+SCL            I2C clock SCL / A5 (on arduino Uno) / Digital 21 (On Mega) / Digital 3 (on Lionardo or Micro)
+SDA            I2C data      / A4                  / Digital 20           / Digital 2
+*/
 Adafruit_VL6180X vl = Adafruit_VL6180X();
 
 void setup() {

@@ -139,7 +139,9 @@ class RecorderWithCallback:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Azure kinect mkv recorder.')
-    parser.add_argument('--config', type=str, help='input json kinect config')
+    parser.add_argument('--config', type=str,
+                        default=r'C:\Users\lahir\code\hand-depth\detect_kypts\kinect\config.json',
+                        help='input json kinect config')
     parser.add_argument('--output', type=str,
                         default='C:\\Users\\lahir\\data\\kinect_hand_data\\test\\', 
                         help='output directory')
@@ -154,13 +156,17 @@ if __name__ == '__main__':
                         type=int,
                         default=1,
                         help='number of images to take. -1 to ercord until ESC is pressed')
+    parser.add_argument('--pad',
+                    type=bool,
+                    default=True,
+                    help='number of images to take. -1 to ercord until ESC is pressed')
     parser.add_argument('-a',
                         '--align_depth_to_color',
                         action='store_true',
                         help='enable align depth image to color')
     args = parser.parse_args()
 
-    SIZE=(1280,1280)
+    SIZE=(1920,1280)
 
     if args.list:
         o3d.io.AzureKinectSensor.list_devices()
@@ -222,8 +228,11 @@ if __name__ == '__main__':
             print(f'image size {np_img.shape}')
             col_image=Image.fromarray(np_img,'RGB')
             #pad image
-            result = Image.new(col_image.mode, SIZE, (0, 0, 0)) 
-            result.paste(col_image, (0,0)) 
+            if args.pad:
+                result = Image.new(col_image.mode, SIZE, (0, 0, 0)) 
+                result.paste(col_image, (0,0)) 
+            else:
+                result=col_image
             result.save(os.path.join(color_dir,str(img_n)+'.jpg'))
             depthimg=Image.fromarray(np.asarray(rgbd.depth))
             depthimg.save(os.path.join(depth_dir,str(img_n)+'.png'))
