@@ -8,7 +8,7 @@ from KyptPred import PredictKypt
 import json
 import argparse
 import cv2
-import numpy as np
+import numpy as np 
 from detect_kypts import utils
 import numpy as np
 from scipy.interpolate import interp1d

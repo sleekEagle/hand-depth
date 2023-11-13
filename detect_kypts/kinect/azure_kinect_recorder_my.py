@@ -75,51 +75,74 @@ class RecorderWithCallback:
         return False
 
     def run(self):
-        glfw_key_escape = 256
-        glfw_key_space = 32
-        vis = o3d.visualization.VisualizerWithKeyCallback()
-        vis.register_key_callback(glfw_key_escape, self.escape_callback)
-        vis.register_key_callback(glfw_key_space, self.space_callback)
+        # glfw_key_escape = 256
+        # glfw_key_space = 32
+        # vis = o3d.visualization.VisualizerWithKeyCallback()
+        # vis.register_key_callback(glfw_key_escape, self.escape_callback)
+        # vis.register_key_callback(glfw_key_space, self.space_callback)
 
-        vis.create_window('recorder', 1920, 540)
-        print("Recorder initialized. Press [SPACE] to start. "
-              "Press [ESC] to save and exit.")
+        # vis.create_window('recorder', 1920, 540)
+        # print("Recorder initialized. Press [SPACE] to start. "
+        #       "Press [ESC] to save and exit.")
 
-        vis_geometry_added = False
+        # vis_geometry_added = False
         num_imgs=0
-        
-        while not self.flag_exit:
-            rgbd = self.recorder.record_frame(self.flag_record,
+
+        if not self.recorder.is_record_created():
+            if self.recorder.open_record(self.filename):
+                print('Recording started. '
+                      'Press [SPACE] to pause. '
+                      'Press [ESC] to save and exit.')
+
+
+        while True:
+            rgbd = self.recorder.record_frame(True,
                                               self.align_depth_to_color)
             if rgbd is None:
                 continue
-
-            if self.flag_record:
-                #write ts to the ts file
-                ts=self.get_ts()
-                with open(self.ts_filename, 'a') as f:
-                    f.write(ts+'\n')
-        
-                if not self.n == -1:
-                    num_imgs+=1
-                    if num_imgs==self.n:
-                        break
-
-            if not vis_geometry_added:
-                vis.add_geometry(rgbd)
-                vis_geometry_added = True
-
-            vis.update_geometry(rgbd)
-            vis.poll_events()
-            vis.update_renderer()
-
+            ts=self.get_ts()
+            with open(self.ts_filename, 'a') as f:
+                f.write(ts+'\n')
+            if not self.n == -1:
+                num_imgs+=1
+                if num_imgs==self.n:
+                    break
         self.recorder.close_record()
+        
+        # while not self.flag_exit:
+        #     rgbd = self.recorder.record_frame(self.flag_record,
+        #                                       self.align_depth_to_color)
+        #     if rgbd is None:
+        #         continue
+
+        #     if self.flag_record:
+        #         #write ts to the ts file
+        #         ts=self.get_ts()
+        #         with open(self.ts_filename, 'a') as f:
+        #             f.write(ts+'\n')
+        
+        #         if not self.n == -1:
+        #             num_imgs+=1
+        #             if num_imgs==self.n:
+        #                 break
+
+        #     if not vis_geometry_added:
+        #         vis.add_geometry(rgbd)
+        #         vis_geometry_added = True
+
+        #     vis.update_geometry(rgbd)
+        #     vis.poll_events()
+        #     vis.update_renderer()
+
+        # self.recorder.close_record()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Azure kinect mkv recorder.')
     parser.add_argument('--config', type=str, help='input json kinect config')
-    parser.add_argument('--output', type=str, help='output directory')
+    parser.add_argument('--output', type=str,
+                        default='C:\\Users\\lahir\\data\\kinect_hand_data\\test\\', 
+                        help='output directory')
     parser.add_argument('--list',
                         action='store_true',
                         help='list available azure kinect sensors')
@@ -129,7 +152,7 @@ if __name__ == '__main__':
                         help='input kinect device id')
     parser.add_argument('--n',
                         type=int,
-                        default=-1,
+                        default=1,
                         help='number of images to take. -1 to ercord until ESC is pressed')
     parser.add_argument('-a',
                         '--align_depth_to_color',
