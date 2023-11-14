@@ -11,6 +11,9 @@ import cv2
 import numpy as np
 import datetime
 import utils
+from pathlib import Path
+
+print('done imports')
 
 def get_ts(ts_str):
     splt=ts_str.split('_')
@@ -18,13 +21,17 @@ def get_ts(ts_str):
     return ts
 
 # fps: camera FPS used
-def main(data_dir,fps=5):
-    rgb_dir=os.path.join(data_dir,'kinect','color')
-    depth_dir=os.path.join(data_dir,'kinect','depth')
+def main(args,fps=5):
+    rgb_dir=os.path.join(args.data_dir,'color')
+    depth_dir=os.path.join(args.data_dir,'depth')
+
+    if args.save_kypt_imgs:
+        kypt_pth=os.path.join(args.data_dir,'kypt_plots')
+        Path(kypt_pth).mkdir(parents=True, exist_ok=True)
 
     #extract start timestamp
-    rec_name=[file for file in os.listdir(data_dir) if file[-3:]=='mkv']
-    tsfile_name=os.path.join(data_dir,rec_name[0].replace('mkv','txt'))
+    rec_name=[file for file in os.listdir(args.data_dir) if file[-3:]=='mkv']
+    tsfile_name=os.path.join(args.data_dir,rec_name[0].replace('mkv','txt'))
 
     with open(tsfile_name, 'r') as file:
         lines = file.readlines()
@@ -43,6 +50,9 @@ def main(data_dir,fps=5):
         result=Kypt.get_kypts(full_path)
         bb_score=result['bbox_score']
         img_num=int(file.split('.')[0])
+        ts_num=img_num-1
+        if args.save_kypt_imgs:
+            Kypt.save_kypts(os.path.join(kypt_pth,file))
 
         #read depth image
         d_file=file.split('.')[0]+'.png'
@@ -54,6 +64,8 @@ def main(data_dir,fps=5):
             hand_kypts=result['keypoints']
             #get depth for each keypoint location
             k_depths=[]
+            #save an image with keypoints shown
+
 
             for kypt in hand_kypts:
                 kx,ky=kypt
@@ -76,7 +88,7 @@ def main(data_dir,fps=5):
                     'keypoint_scores': result['keypoint_scores'],
                     'bbox_score': result['bbox_score'],
                     'keypoint_depths': k_depths,
-                    'ts': ts_s_list[i]}
+                    'ts': ts_s_list[ts_num]}
             k_depths_ar=np.concatenate((k_depths_ar,np.array([k_depths])),axis=0)
             # if detect_time:
             #     #extract timestamp from digital clock with computer vision
@@ -93,17 +105,17 @@ def main(data_dir,fps=5):
     filled_depths=np.empty((k_depths_ar.shape[0],0))
     for i in range(k_depths_ar.shape[-1]):
         vals=k_depths_ar[:,i]
-        args=np.argwhere(vals==0)[:,0]
+        indx=np.argwhere(vals==0)[:,0]
         pred_vals=interp_funcs[i](ts_s_list)
         filled_vals=vals.copy()
-        filled_vals[args]=pred_vals[args]
+        filled_vals[indx]=pred_vals[indx]
         filled_depths=np.concatenate((filled_depths,np.expand_dims(filled_vals,axis=1)),axis=-1)
     
     #add the interpolated values to the data dictionary
     for i,key in enumerate(data.keys()):
         data[key]['keypoint_depths_interp']=list(filled_depths[i,:])
 
-    json_file=os.path.join(data_dir,'data.json')
+    json_file=os.path.join(args.data_dir,'data.json')
     with open(json_file, "w") as outfile: 
         json.dump(str(data), outfile) 
 
@@ -111,26 +123,33 @@ def main(data_dir,fps=5):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Detect hand keypoints')
     parser.add_argument('--data_dir', type=str, help='directory containing data',
-                        default='C:\\Users\\lahir\\data\\kinect_hand_data\\testdata2\\')
+                        default='C:\\Users\\lahir\\data\\CPR_experiment\\test\\kinect\\')
+    parser.add_argument('--save_kypt_imgs', type=bool, help='save images with keypts shown?',
+                        default=True)
     args = parser.parse_args()
-    main(args.data_dir)  
-    
+    main(args)  
 
 # import json
 # import numpy as np
 # import ast
+# import matplotlib.pyplot as plt
 
-# f=open(r'C:\Users\lahir\data\kinect_hand_data\testdata\data.json')
+# f=open(r'C:\Users\lahir\data\CPR_experiment\test\kinect\data.json')
 # d=f.read()
 # data=json.loads(d)
 # data=ast.literal_eval(data)
 
 # d_list=[]
+# d_list_interp=[]
 # for i in range(len(data)):
 #     d=data[i]['keypoint_depths']
+#     d_interp=data[i]['keypoint_depths_interp']
 #     d_list.extend(d)
+#     d_list_interp.extend(d_interp)
 
-
+# plt.plot(d_list)
+# plt.plot(d_list_interp)
+# plt.show()
 
 
 # import json
