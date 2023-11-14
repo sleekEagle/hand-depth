@@ -5,8 +5,8 @@ from scipy.interpolate import CubicSpline
 import numpy as np
 from datetime import datetime
 import os
-from google.cloud import vision
-client = vision.ImageAnnotatorClient()
+# from google.cloud import vision
+# client = vision.ImageAnnotatorClient()
 
 
 # pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
