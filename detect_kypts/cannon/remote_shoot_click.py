@@ -33,7 +33,8 @@ n_imgs: number of photos to take
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Shoot photos remotely with canon camera.')
     parser.add_argument('--n', type=int,
-                        default=1,
+                        default=-1,
                         help='nuber of images to shoot. -1 for continuous shooting.')
     args = parser.parse_args()
     win32gui.EnumWindows( winEnumHandler,args.n)
+    time.sleep(1)

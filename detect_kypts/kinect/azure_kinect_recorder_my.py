@@ -15,6 +15,7 @@ from os.path import join
 import numpy as np
 import os
 from PIL import Image
+from pathlib import Path
 
 '''
 We modified this so the record filename includes the timestamp when the recording is started. 
@@ -96,17 +97,21 @@ class RecorderWithCallback:
 
 
         while True:
-            rgbd = self.recorder.record_frame(True,
-                                              self.align_depth_to_color)
-            if rgbd is None:
-                continue
-            ts=self.get_ts()
-            with open(self.ts_filename, 'a') as f:
-                f.write(ts+'\n')
-            if not self.n == -1:
-                num_imgs+=1
-                if num_imgs==self.n:
-                    break
+            try:
+                rgbd = self.recorder.record_frame(True,
+                                                self.align_depth_to_color)
+                if rgbd is None:
+                    continue
+                ts=self.get_ts()
+                with open(self.ts_filename, 'a') as f:
+                    f.write(ts+'\n')
+                if not self.n == -1:
+                    num_imgs+=1
+                    if num_imgs==self.n:
+                        break
+            except KeyboardInterrupt:
+                print('keyboard inturrupt. Saving images....')
+                break
         self.recorder.close_record()
         
         # while not self.flag_exit:
@@ -143,7 +148,7 @@ if __name__ == '__main__':
                         default=r'C:\Users\lahir\code\hand-depth\detect_kypts\kinect\config.json',
                         help='input json kinect config')
     parser.add_argument('--output', type=str,
-                        default='C:\\Users\\lahir\\data\\kinect_hand_data\\test\\', 
+                        default='C:\\Users\\lahir\\data\\CPR_experiment\\test\\kinect\\', 
                         help='output directory')
     parser.add_argument('--list',
                         action='store_true',
@@ -165,6 +170,9 @@ if __name__ == '__main__':
                         action='store_true',
                         help='enable align depth image to color')
     args = parser.parse_args()
+
+    #make direcotry
+    Path(args.output).mkdir(parents=True, exist_ok=True)
 
     SIZE=(1920,1280)
 
@@ -201,7 +209,7 @@ if __name__ == '__main__':
     #read the mkv file and extract images
     reader = o3d.io.AzureKinectMKVReader()
     reader.open(record_filename)
-    print('opened')
+    # print('opened')
 
     color_dir=os.path.join(args.output,'color')
     depth_dir=os.path.join(args.output,'depth')
@@ -222,10 +230,10 @@ if __name__ == '__main__':
         if rgbd is None:
             continue
         if args.output is not None:
-            print('here')
+            # print('here')
             img_n+=1
             np_img=np.array(rgbd.color)
-            print(f'image size {np_img.shape}')
+            # print(f'image size {np_img.shape}')
             col_image=Image.fromarray(np_img,'RGB')
             #pad image
             if args.pad:
@@ -236,3 +244,4 @@ if __name__ == '__main__':
             result.save(os.path.join(color_dir,str(img_n)+'.jpg'))
             depthimg=Image.fromarray(np.asarray(rgbd.depth))
             depthimg.save(os.path.join(depth_dir,str(img_n)+'.png'))
+            print(f'{img_n} image saved')

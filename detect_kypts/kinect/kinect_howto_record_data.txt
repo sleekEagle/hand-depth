@@ -22,6 +22,7 @@ while ($true) {
     $currentTime = Get-Date -Format "HH:mm:ss.fff"
     Write-Host -NoNewline $currentTime
     Start-Sleep -Milliseconds 1
+    clear
     [System.Console]::SetCursorPosition(0, [System.Console]::CursorTop)
 }
 

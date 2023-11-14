@@ -27,19 +27,19 @@ stereo_calib_path='C:\\Users\\lahir\\data\\kinect_hand_data\\testdata4\\calib\\'
 R,T=utils.get_stereo_calib_matrices(stereo_calib_path)
 
 
-k_kinect=utils.get_matr(r'C:\Users\lahir\data\kinect_hand_data\calibration\K_kinect.txt')
-k_canon=utils.get_matr(r'C:\Users\lahir\data\kinect_hand_data\calibration\K_canon.txt')
-R=utils.get_matr(r'C:\Users\lahir\data\kinect_hand_data\calibration\R.txt')
-T=utils.get_matr(r'C:\Users\lahir\data\kinect_hand_data\calibration\T.txt')
+k_kinect=utils.get_matr(r'C:\Users\lahir\data\calibration\nov13\kinect_k.txt')
+k_canon=utils.get_matr(r'C:\Users\lahir\data\calibration\nov13\canon_k.txt')
+R=utils.get_matr(r'C:\Users\lahir\data\calibration\nov13\R.txt')
+T=utils.get_matr(r'C:\Users\lahir\data\calibration\nov13\T.txt')
 
 #test the  R and T matrices
 sys.path.append('C:\\Users\\lahir\\code\\hand-depth\\detect_kypts\\')
 import single_calib as singlecalib
 import matplotlib.pyplot as plt
 
-kinect_img=r'C:\Users\lahir\data\kinect_hand_data\calibration\kinect\color\4.jpg'
-kinect_depth=r'C:\Users\lahir\data\kinect_hand_data\calibration\kinect\depth\4.png'
-canon_img=r'C:\Users\lahir\data\kinect_hand_data\calibration\canon\4.jpg'
+kinect_img=r'C:\Users\lahir\data\kinect_hand_data\test\color\65.jpg'
+kinect_depth=r'C:\Users\lahir\data\kinect_hand_data\test\depth\65.png'
+canon_img=r'C:\Users\lahir\Pictures\2023_11_13\65.jpg'
 kinect = cv2.imread(kinect_img, cv2.IMREAD_COLOR)
 depth = cv2.imread(kinect_depth, cv2.IMREAD_UNCHANGED).astype('float32')
 
