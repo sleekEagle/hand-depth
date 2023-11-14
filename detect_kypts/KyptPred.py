@@ -24,6 +24,17 @@ class PredictKypt:
         plt.imshow(image)
         plt.scatter(x,y)
         plt.show()
+
+    def save_kypts(self,path):
+        import cv2
+
+        keypoints=self.result['keypoints']
+        if self.result['bbox_score']<0.8:
+            image = cv2.imread(self.img_path)
+            for point in keypoints:
+                cv2.circle(image, (round(point[0]),round(point[1])), radius=5, color=(0, 0, 255), thickness=-1)
+            cv2.imwrite(path, image)
+        
     
     def get_kypts(self,img_path):
         self.img_path=img_path
