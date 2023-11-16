@@ -12,6 +12,7 @@ import numpy as np
 import datetime
 import utils
 from pathlib import Path
+import open3d as o3d
 
 print('done imports')
 
@@ -21,7 +22,15 @@ def get_ts(ts_str):
     return ts
 
 # fps: camera FPS used
-def main(args,fps=5):
+def main(args,fps=30):
+    #extract data from mkv video
+    mkvfile=[f for f in os.listdir(args.data_dir) if '.mkv' in f.lower()][0]
+    args_dict={
+        'record_filename':r'C:\Users\lahir\data\CPR_experiment\test\kinect\2023-11-15-14-42-41.mkv',
+        'output':'C:\\Users\\lahir\\data\\CPR_experiment\\test\\kinect\\',
+        'pad':False,
+    }
+    # utils.extract_kinect_imgs(args_dict)
     rgb_dir=os.path.join(args.data_dir,'color')
     depth_dir=os.path.join(args.data_dir,'depth')
 
@@ -39,6 +48,7 @@ def main(args,fps=5):
     ts_s_list=np.array([get_ts(ts_str) for ts_str in ts_list])
 
     #if bbox_score > bb_thresh no hands are detected
+    ts_store,img_num_store=[],[]
     bb_thresh=0.8
     Kypt=PredictKypt()
     data={}
@@ -51,6 +61,8 @@ def main(args,fps=5):
         bb_score=result['bbox_score']
         img_num=int(file.split('.')[0])
         ts_num=img_num-1
+        if ts_num==len(ts_s_list):
+            continue
         if args.save_kypt_imgs:
             Kypt.save_kypts(os.path.join(kypt_pth,file))
 
@@ -89,6 +101,8 @@ def main(args,fps=5):
                     'bbox_score': result['bbox_score'],
                     'keypoint_depths': k_depths,
                     'ts': ts_s_list[ts_num]}
+            ts_store.append(ts_s_list[ts_num])
+            img_num_store.append(img_num)
             k_depths_ar=np.concatenate((k_depths_ar,np.array([k_depths])),axis=0)
             # if detect_time:
             #     #extract timestamp from digital clock with computer vision
@@ -98,23 +112,37 @@ def main(args,fps=5):
             data[n]=this_data
             n+=1
 
-    #interpolate missing depth values : cubic spline interpolation
+    #interpolate missing depth values : cubic spline interpolation  
+    ts_store=np.array(ts_store)
+    sorted_ind=np.argsort(ts_store)
+    #remove zeros
+    ts_sorted=ts_store[sorted_ind]
 
-    interp_funcs=utils.fit_cubicsplines(ts_s_list,k_depths_ar)
-    #interpolate missing values of the k_depths
-    filled_depths=np.empty((k_depths_ar.shape[0],0))
-    for i in range(k_depths_ar.shape[-1]):
-        vals=k_depths_ar[:,i]
-        indx=np.argwhere(vals==0)[:,0]
-        pred_vals=interp_funcs[i](ts_s_list)
-        filled_vals=vals.copy()
-        filled_vals[indx]=pred_vals[indx]
-        filled_depths=np.concatenate((filled_depths,np.expand_dims(filled_vals,axis=1)),axis=-1)
+    interp_funcs=utils.fit_cubicsplines_nozeros(ts_store[sorted_ind],k_depths_ar[sorted_ind,:])
+    # #interpolate missing values of the k_depths
+    # filled_depths=np.empty((k_depths_ar.shape[0],0))
+    # for i in range(k_depths_ar.shape[-1]):
+    #     vals=k_depths_ar[:,i]
+    #     indx=np.argwhere(vals==0)[:,0]
+    #     pred_vals=interp_funcs[i](ts_s_list)
+    #     filled_vals=vals.copy()
+    #     filled_vals[indx]=pred_vals[indx]
+    #     filled_depths=np.concatenate((filled_depths,np.expand_dims(filled_vals,axis=1)),axis=-1)
     
-    #add the interpolated values to the data dictionary
-    for i,key in enumerate(data.keys()):
-        data[key]['keypoint_depths_interp']=list(filled_depths[i,:])
+    # #add the interpolated values to the data dictionary
 
+    # plt.plot(ts_store[sorted_ind],k_depths_ar[sorted_ind,0])
+    # p=interp_funcs[0](ts_store[sorted_ind])
+    # plt.plot(ts_store[sorted_ind],p)
+    # plt.show()
+
+
+    for index, (key, value) in enumerate(data.items()):
+        kyp_depths_interp=[]
+        for j in range(k_depths_ar.shape[-1]):
+            kyp_depths_interp.append(interp_funcs[j](value['ts']).item())
+        data[key]['keypoint_depths_interp']=kyp_depths_interp
+        
     json_file=os.path.join(args.data_dir,'data.json')
     with open(json_file, "w") as outfile: 
         json.dump(str(data), outfile) 
@@ -128,27 +156,23 @@ if __name__ == "__main__":
                         default=True)
     args = parser.parse_args()
     main(args)  
+    
 
-# import json
-# import numpy as np
-# import ast
-# import matplotlib.pyplot as plt
 
-# f=open(r'C:\Users\lahir\data\CPR_experiment\test\kinect\data.json')
-# d=f.read()
-# data=json.loads(d)
-# data=ast.literal_eval(data)
+
 
 # d_list=[]
 # d_list_interp=[]
 # for i in range(len(data)):
 #     d=data[i]['keypoint_depths']
 #     d_interp=data[i]['keypoint_depths_interp']
-#     d_list.extend(d)
-#     d_list_interp.extend(d_interp)
+#     d_list.append(d)
+#     d_list_interp.append(d_interp)
 
-# plt.plot(d_list)
-# plt.plot(d_list_interp)
+
+# [item[0] for item in d_list_interp]
+# plt.plot([item[0] for item in d_list])
+# plt.plot([item[0] for item in d_list_interp], marker='o')
 # plt.show()
 
 

@@ -5,8 +5,8 @@ from scipy.interpolate import CubicSpline
 import numpy as np
 from datetime import datetime
 import os
-# from google.cloud import vision
-# client = vision.ImageAnnotatorClient()
+from google.cloud import vision
+client = vision.ImageAnnotatorClient()
 
 
 # pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -73,7 +73,7 @@ def get_ts_google(image_path):
 
 # get_ts_google(r'C:\Users\lahir\Downloads\Photos-001\20000101000129_IMG_0256.JPG')
 
-def fit_cubicsplines(x,val_ar):
+def fit_cubicsplines_nozeros(x,val_ar):
     func_list=[]
     for i in range(val_ar.shape[-1]):
         vals=val_ar[:,i]
@@ -81,6 +81,15 @@ def fit_cubicsplines(x,val_ar):
         x_=x[args][:,0]
         vals_=vals[args][:,0]
         spl=CubicSpline(x_,vals_)
+        func_list.append(spl)
+    return func_list
+
+
+def fit_cubicsplines(x,val_ar):
+    func_list=[]
+    for i in range(val_ar.shape[-1]):
+        vals=val_ar[:,i]
+        spl=CubicSpline(x,vals)
         func_list.append(spl)
     return func_list
 
@@ -142,6 +151,76 @@ def calc_XYZ(k,x,y,d):
     X=(x-cx)/fx*Z
     Y=(y-cy)/fy*Z
     return X,Y,Z
+
+#extract on image from a video, do this for all the videos
+def extract_imgs_mul(data_dir,ext='mov'):
+    import subprocess
+    outdir='imgs'
+    os.makedirs(os.path.join(data_dir,outdir), exist_ok=True)
+    mov_files=[file for file in os.listdir(data_dir) if ext.lower() in file.lower()]
+    mov_files.sort()
+    for i,file in enumerate(mov_files):
+        out_file=f'{i+1}.jpg'
+        cd=f'ffmpeg -i {os.path.join(data_dir,file)} -vframes 1 {os.path.join(data_dir,outdir,out_file)}'
+        result = subprocess.run(cd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+#extract frames from a given video
+# video_file=r'C:\Users\lahir\data\CPR_experiment\test\canon\img_0505.MOV'
+def extract_imgs(video_file,fps=60):
+    import subprocess
+    outdir='imgs'
+    dir=os.path.dirname(video_file)
+    outdir=os.path.join(dir,'imgs')
+    os.makedirs(os.path.join(dir,outdir), exist_ok=True)
+    cd=f'ffmpeg -i {video_file} -r {fps} -q:v 2 {os.path.join(dir,outdir)}\\image-%03d.jpg'
+    result = subprocess.run(cd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+def extract_kinect_imgs(args):
+    import open3d as o3d
+    from PIL import Image
+
+    SIZE=(1920,1280)
+    
+    reader = o3d.io.AzureKinectMKVReader()
+    reader.open(args['record_filename'])
+
+    color_dir=os.path.join(args['output'],'color')
+    depth_dir=os.path.join(args['output'],'depth')
+    os.makedirs(color_dir, exist_ok=True)
+    os.makedirs(depth_dir, exist_ok=True)
+    print(color_dir)
+    print(depth_dir)
+    try:
+        os.makedirs(color_dir, exist_ok=False)
+        os.makedirs(depth_dir, exist_ok=False)
+    except Exception as e:
+        print("Error:", e)
+    
+    #read existing color images
+    img_n=len([file for file in os.listdir(color_dir) if file.split('.')[-1].lower()=='jpg'])
+    print(f'n images = {img_n}')
+
+    while not reader.is_eof():
+        rgbd = reader.next_frame()
+        if rgbd is None:
+            continue
+        if args['output'] is not None:
+            # print('here')
+            img_n+=1
+            np_img=np.array(rgbd.color)
+            # print(f'image size {np_img.shape}')
+            col_image=Image.fromarray(np_img,'RGB')
+            #pad image
+            if args['pad']:
+                result = Image.new(col_image.mode, SIZE, (0, 0, 0)) 
+                result.paste(col_image, (0,0)) 
+            else:
+                result=col_image
+            result.save(os.path.join(color_dir,str(img_n)+'.jpg'))
+            depthimg=Image.fromarray(np.asarray(rgbd.depth))
+            depthimg.save(os.path.join(depth_dir,str(img_n)+'.png'))
+            print(f'{img_n} image saved')
+
 
 
 

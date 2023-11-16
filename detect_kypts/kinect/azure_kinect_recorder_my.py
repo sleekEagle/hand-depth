@@ -14,8 +14,8 @@ from datetime import datetime
 from os.path import join
 import numpy as np
 import os
-from PIL import Image
 from pathlib import Path
+from detect_kypts import utils
 
 '''
 We modified this so the record filename includes the timestamp when the recording is started. 
@@ -163,18 +163,21 @@ if __name__ == '__main__':
                         help='number of images to take. -1 to ercord until ESC is pressed')
     parser.add_argument('--pad',
                     type=bool,
-                    default=True,
+                    default=False,
                     help='number of images to take. -1 to ercord until ESC is pressed')
     parser.add_argument('-a',
                         '--align_depth_to_color',
                         action='store_true',
                         help='enable align depth image to color')
+    parser.add_argument('--saveimgs',
+                    type=bool,
+                    default=False,
+                    help='Extract imgs after recording')
+    
     args = parser.parse_args()
 
     #make direcotry
     Path(args.output).mkdir(parents=True, exist_ok=True)
-
-    SIZE=(1920,1280)
 
     if args.list:
         o3d.io.AzureKinectSensor.list_devices()
@@ -207,41 +210,8 @@ if __name__ == '__main__':
     r.run()
 
     #read the mkv file and extract images
-    reader = o3d.io.AzureKinectMKVReader()
-    reader.open(record_filename)
-    # print('opened')
-
-    color_dir=os.path.join(args.output,'color')
-    depth_dir=os.path.join(args.output,'depth')
-    print(color_dir)
-    print(depth_dir)
-    try:
-        os.makedirs(color_dir, exist_ok=False)
-        os.makedirs(depth_dir, exist_ok=False)
-    except Exception as e:
-        print("Error:", e)
-    
-    #read existing color images
-    img_n=len([file for file in os.listdir(color_dir) if file.split('.')[-1].lower()=='jpg'])
-    print(f'n images = {img_n}')
-
-    while not reader.is_eof():
-        rgbd = reader.next_frame()
-        if rgbd is None:
-            continue
-        if args.output is not None:
-            # print('here')
-            img_n+=1
-            np_img=np.array(rgbd.color)
-            # print(f'image size {np_img.shape}')
-            col_image=Image.fromarray(np_img,'RGB')
-            #pad image
-            if args.pad:
-                result = Image.new(col_image.mode, SIZE, (0, 0, 0)) 
-                result.paste(col_image, (0,0)) 
-            else:
-                result=col_image
-            result.save(os.path.join(color_dir,str(img_n)+'.jpg'))
-            depthimg=Image.fromarray(np.asarray(rgbd.depth))
-            depthimg.save(os.path.join(depth_dir,str(img_n)+'.png'))
-            print(f'{img_n} image saved')
+    if args.saveimgs:
+        
+        # print('opened')
+        args.record_filename=record_filename
+        utils.extract_kinect_imgs(args)
