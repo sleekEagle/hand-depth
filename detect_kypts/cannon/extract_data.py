@@ -1,9 +1,9 @@
 import os
 import sys
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(parent)
-from KyptPred import PredictKypt
+# current = os.path.dirname(os.path.realpath(__file__))
+# parent = os.path.dirname(current)
+# sys.path.append(parent)
+# from KyptPred import PredictKypt
 # import DetectTime
 import json
 import argparse
@@ -12,11 +12,17 @@ import numpy as np
 import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
-from detect_kypts import utils
+os.path.dirname(sys.path[0])
+sys.path.append(os.path.dirname(sys.path[0]))
+print(sys.path)
+import utils
 import ast
 
-data_dir=r'C:\Users\lahir\data\CPR_experiment\test\kinect\2023-11-15-14-42-41.mkv'
-utils.extract_imgs(data_dir,fps=30)
+
+#extract images from video
+canon_dir='C:\\Users\\lahir\\data\\CPR_experiment\\test\\canon\\'
+image_file=r'C:\\Users\\lahir\\data\\CPR_experiment\\test\\canon\\img_0505.MOV'
+utils.extract_imgs(image_file,fps=60)
 
 # #read the calibration matrices
 # kinect_calib_dir='C:\\Users\\lahir\\data\\kinect_hand_data\\testdata4\\calib\\kinect\\imgs\\'
@@ -83,7 +89,7 @@ import matplotlib.pyplot as plt
 
 
 #read kinect timestamp and depth values of the keypoints
-data_file=r'C:\Users\lahir\data\CPR_experiment\test\kinect\data.json'
+data_file=r'C:\Users\lahir\data\CPR_experiment\test\kinect\sorted_data.json'
 f=open(data_file)
 d=f.read()
 data=json.loads(d)
@@ -140,29 +146,57 @@ np.argwhere(sorted_img_num==56)
 
 
 #testing******************************************
-# i=16
-# cancon_homo=np.matmul(k_canon,canon_XYZ_ar[i].T)
-# cancon_homo=cancon_homo/cancon_homo[-1]
-# canon_img=r'C:\Users\lahir\data\CPR_experiment\test\canon\img_0291.JPG'
-# img=cv2.imread(canon_img,cv2.IMREAD_COLOR)
-# for i in range(21):
-#     cv2.circle(img, (round(cancon_homo[0,i]),round(cancon_homo[1,i])), radius=5, color=(0, 0, 255), thickness=-1)
+i=16
+cancon_homo=np.matmul(k_canon,canon_XYZ_ar[i].T)
+cancon_homo=cancon_homo/cancon_homo[-1]
+canon_img=r'C:\Users\lahir\data\CPR_experiment\test\canon\imgs\image-1576.jpg'
+img=cv2.imread(canon_img,cv2.IMREAD_COLOR)
+for i in range(21):
+    cv2.circle(img, (round(cancon_homo[0,i]),round(cancon_homo[1,i])), radius=5, color=(0, 0, 255), thickness=-1)
 
-# cv2.imshow('img',img)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
+cv2.imshow('img',img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 
 #end testing*******************************
 
+# imgpth=r'C:\Users\lahir\data\CPR_experiment\test\canon\imgs\image-1705.jpg'
+# utils.get_ts_google(imgpth)
+
 
 #get canon timstamps
-files=utils.get_files_ext(data_dir,['jpg'])
-ts_ms_list=[]
-for file in files:
-    ts=utils.get_ts_google(os.path.join(data_dir,file))
-    ts_ms=utils.get_ms(ts)
-    ts_ms_list.append(ts_ms)
-ts_s=np.array(ts_ms_list)/1000
+# canon_img_dir=os.path.join(canon_dir,'imgs')
+# files=utils.get_files_ext(canon_img_dir,['jpg'])
+# ts_ms_list=[]
+# ts_detected_files=[]
+# for i,file in enumerate(files):
+#     ts=utils.get_ts_google(os.path.join(canon_img_dir,file))
+#     if type(ts) is str:
+#         try:
+#             ts_ms=utils.get_ms(ts)
+#             ts_ms_list.append(ts_ms)
+#             ts_detected_files.append(file)
+#             print(f'ts: {ts} done:{i/len(files)}')
+#         except:
+#             print('Could not extract ts from img text due to ecception')
+#     else:
+#         print(f'ts not detected in image {file}')
+# ts_s=np.array(ts_ms_list)/1000
+
+# #ave these (for degubbing)
+# import pickle
+# with open('C:\\Users\\lahir\\data\\CPR_experiment\\test\\canon\\ts_s.pkl', 'wb') as file:
+#     pickle.dump(ts_s, file)
+# with open('C:\\Users\\lahir\\data\\CPR_experiment\\test\\canon\\files.pkl', 'wb') as file:
+#     pickle.dump(ts_detected_files, file)
+
+print('here')
+import pickle
+with open('C:\\Users\\lahir\\data\\CPR_experiment\\test\\canon\\ts_s.pkl', 'rb') as file:
+    ts_s = pickle.load(file)
+with open('C:\\Users\\lahir\\data\\CPR_experiment\\test\\canon\\files.pkl', 'rb') as file:
+    ts_detected_files = pickle.load(file)
+
 
 #start and end positions of the section we want to interpolate
 k_start,k_end=14,114

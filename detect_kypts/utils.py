@@ -5,8 +5,6 @@ from scipy.interpolate import CubicSpline
 import numpy as np
 from datetime import datetime
 import os
-from google.cloud import vision
-client = vision.ImageAnnotatorClient()
 
 
 # pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -59,6 +57,8 @@ img=r'C:\\Users\\lahir\\Downloads\\time.jpg'
 get_ts_google(img)
 '''
 def get_ts_google(image_path):
+    from google.cloud import vision
+    client = vision.ImageAnnotatorClient()
     with open(image_path, "rb") as image_file:
             content = image_file.read()
     image = vision.Image(content=content)
@@ -178,6 +178,10 @@ def extract_imgs(video_file,fps=60):
 def extract_kinect_imgs(args):
     import open3d as o3d
     from PIL import Image
+    v=args['pad']
+    print(f'args.pad : {v}')
+
+    #convert parseargs to dict
 
     SIZE=(1920,1280)
     
@@ -198,7 +202,7 @@ def extract_kinect_imgs(args):
     
     #read existing color images
     img_n=len([file for file in os.listdir(color_dir) if file.split('.')[-1].lower()=='jpg'])
-    print(f'n images = {img_n}')
+    print(f'existing images = {img_n}')
 
     while not reader.is_eof():
         rgbd = reader.next_frame()
@@ -211,6 +215,7 @@ def extract_kinect_imgs(args):
             # print(f'image size {np_img.shape}')
             col_image=Image.fromarray(np_img,'RGB')
             #pad image
+            print(args['pad'])
             if args['pad']:
                 result = Image.new(col_image.mode, SIZE, (0, 0, 0)) 
                 result.paste(col_image, (0,0)) 

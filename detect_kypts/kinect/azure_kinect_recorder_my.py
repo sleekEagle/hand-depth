@@ -15,7 +15,10 @@ from os.path import join
 import numpy as np
 import os
 from pathlib import Path
-from detect_kypts import utils
+import sys
+sys.path.append(os.path.dirname(sys.path[0]))
+print(sys.path)
+import utils
 
 '''
 We modified this so the record filename includes the timestamp when the recording is started. 
@@ -159,20 +162,14 @@ if __name__ == '__main__':
                         help='input kinect device id')
     parser.add_argument('--n',
                         type=int,
-                        default=1,
+                        default=342,
                         help='number of images to take. -1 to ercord until ESC is pressed')
-    parser.add_argument('--pad',
-                    type=bool,
-                    default=False,
-                    help='number of images to take. -1 to ercord until ESC is pressed')
+    parser.add_argument('--pad', action='store_true', help='Do we pad the iamges')
     parser.add_argument('-a',
                         '--align_depth_to_color',
                         action='store_true',
                         help='enable align depth image to color')
-    parser.add_argument('--saveimgs',
-                    type=bool,
-                    default=False,
-                    help='Extract imgs after recording')
+    parser.add_argument('--saveimgs', action='store_true', help='Extract imgs after recording')
     
     args = parser.parse_args()
 
@@ -211,7 +208,6 @@ if __name__ == '__main__':
 
     #read the mkv file and extract images
     if args.saveimgs:
-        
         # print('opened')
         args.record_filename=record_filename
-        utils.extract_kinect_imgs(args)
+        utils.extract_kinect_imgs(vars(args))
